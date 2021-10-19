@@ -12,29 +12,12 @@ IF = 5
 END = 6
 ELSE = 7
 
-def push(x):
-    return (PUSH, x)
-
-def plus():
-    return (PLUS, )
-
-def minus():
-    return (MINUS, )
-
-def display():
-    return (DISPLAY, )
-
-def equal():
-    return (EQUAL, )
-
-def fi():
-    return (IF, )
-
-def end():
-    return (END, )
-
-def ese():
-    return (ELSE, )
+class Operation():
+    type = None
+    value = None
+    def __init__(self, type, value=None):
+        self.type = type
+        self.value = value
 
 # parser
 def parse(data):
@@ -46,21 +29,21 @@ def parse(data):
             if word in ("","\n","\t"):
                 continue
             if word == "+":
-                operations.append(plus())
+                operations.append(Operation(PLUS))
             elif word == "-":
-                operations.append(minus())
+                operations.append(Operation(MINUS))
             elif word == "=":
-                operations.append(equal())
+                operations.append(Operation(EQUAL))
             elif word.lower() == "display":
-                operations.append(display())
+                operations.append(Operation(DISPLAY))
             elif word.lower() == "if":
-                operations.append(fi())
+                operations.append(Operation(IF))
             elif word.lower() == "else":
-                operations.append(ese())
+                operations.append(Operation(ELSE))
             elif word.lower() == "end":
-                operations.append(end())
+                operations.append(Operation(END))
             else:
-                operations.append(push(int(word)))
+                operations.append(Operation(PUSH,int(word)))
         except:
             print(f"Syntax Error! {word}")
             errors += 1
@@ -76,21 +59,21 @@ def crossreference_blocks(program):
     errors = 0
     for ip in range(len(program)):
         op = program[ip]
-        if op[0] == IF:
+        if op.type == IF:
             stack.append(ip)
-        elif op[0] == ELSE:
+        elif op.type == ELSE:
             try:
                 if_ip = stack.pop()
-                program[if_ip] = (IF, ip + 1)
+                program[if_ip] = Operation(IF, ip + 1)
                 stack.append(ip)
             except:
                 print("SyntaxError! Else used outside of if blocks")
                 errors += 1
-        elif op[0] == END:
+        elif op.type == END:
             try:
                 block_ip = stack.pop()
-                if program[block_ip][0] == IF or program[block_ip][0] == ELSE:
-                    program[block_ip] = (program[block_ip][0], ip)
+                if program[block_ip].type == IF or program[block_ip].type == ELSE:
+                    program[block_ip] = Operation(program[block_ip].type, ip)
             except:
                 print("SyntaxError! End used without needing to close an if block")
                 errors += 1
@@ -144,26 +127,26 @@ def generate(prg):
         asm.write("_start:\n")
         for ip in range(len(program)):
             op = program[ip]
-            if op[0] == PUSH:
-                asm.write(f"    ; -- PUSH {str(op[1])} --\n")
-                asm.write(f"    push {str(op[1])}\n")
-            elif op[0] == PLUS:
-                asm.write(f"    ; -- PLUS --\n")
+            if op.type == PUSH:
+                asm.write(f"    ; -- PUSH {str(op.value)} --\n")
+                asm.write(f"    push {str(op.value)}\n")
+            elif op.type == PLUS:
+                asm.write(f"    ; -- Operation(PLUS) --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    add rax, rbx\n") # add registers
                 asm.write(f"    push rax\n")
-            elif op[0] == MINUS:
-                asm.write(f"    ; -- MINUS --\n")
+            elif op.type == MINUS:
+                asm.write(f"    ; -- Operation(MINUS) --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    sub rbx, rax\n") # substract registers
                 asm.write(f"    push rbx\n")
-            elif op[0] == DISPLAY:
+            elif op.type == DISPLAY:
                 asm.write(f"    ; -- DISPLAY --\n")
                 asm.write(f"    pop rdi\n")
                 asm.write(f"    call display\n") # display
-            elif op[0] == EQUAL:
+            elif op.type == EQUAL:
                 asm.write(f"    ; -- EQUAL --\n")
                 asm.write(f"    mov r10, 0\n")
                 asm.write(f"    mov r11, 1\n")
@@ -172,16 +155,16 @@ def generate(prg):
                 asm.write(f"    cmp rax, rbx\n")
                 asm.write(f"    cmove r10, r11\n") # move only if eq flag is set
                 asm.write(f"    push r10\n")
-            elif op[0] == IF:
+            elif op.type == IF:
                 asm.write(f"    ; -- IF --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    test rax, rax\n")
-                asm.write(f"    jz address_{op[1]}\n")
-            elif op[0] == ELSE:
+                asm.write(f"    jz address_{op.value}\n")
+            elif op.type == ELSE:
                 asm.write(f"    ; -- ELSE --\n")
-                asm.write(f"    jmp address_{op[1]}\n")
+                asm.write(f"    jmp address_{op.value}\n")
                 asm.write(f"address_{ip+1}:\n")
-            elif op[0] == END:
+            elif op.type == END:
                 asm.write(f"address_{ip}:\n")
 
         asm.write("    mov rax, 60\n")
