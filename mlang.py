@@ -18,6 +18,8 @@ ELSE = 7
 DUPLICATE = 8
 GREATER = 9
 LESS = 10
+WHILE = 11
+DO = 12
 
 class Operation():
     type = None
@@ -25,6 +27,8 @@ class Operation():
     def __init__(self, type, value=None):
         self.type = type
         self.value = value
+    def __repr__(self):
+        return f"{self.type}:{self.value}"
 
 # parser
 def parse(data):
@@ -45,14 +49,18 @@ def parse(data):
                 operations.append(Operation(LESS))
             elif word == ">":
                 operations.append(Operation(GREATER))
-            elif word.lower() == "display":
+            elif word.lower() == "display" or word.lower() == "disp":
                 operations.append(Operation(DISPLAY))
             elif word.lower() == "if":
                 operations.append(Operation(IF))
-            elif word.lower() == "else":
-                operations.append(Operation(ELSE))
+            elif word.lower() == "while":
+                operations.append(Operation(WHILE))
+            elif word.lower() == "do":
+                operations.append(Operation(DO))
             elif word.lower() == "end":
                 operations.append(Operation(END))
+            elif word.lower() == "else":
+                operations.append(Operation(ELSE))
             elif word.lower() == "duplicate" or word.lower() == "dp":
                 operations.append(Operation(DUPLICATE))
             else:
@@ -86,9 +94,19 @@ def crossreference_blocks(program):
                 block_ip = stack.pop()
                 if program[block_ip].type == IF or program[block_ip].type == ELSE:
                     program[block_ip] = Operation(program[block_ip].type, ip)
+                    program[ip] = Operation(END, ip+1)
+                elif program[block_ip].type == DO:
+                    program[ip] = Operation(END, program[block_ip].value)
+                    program[block_ip] = Operation(DO, ip + 1)
             except:
-                Error("SyntaxError","End used without needing to close an if block")
+                Error("SyntaxError","End used without needing to close an if or while blocks")
                 errors += 1
+        elif op.type == WHILE:
+            stack.append(ip)
+        elif op.type == DO:
+            program[ip] = Operation(DO, stack.pop())
+            stack.append(ip)
+
     if errors == 0:
         return program
     else:
@@ -139,17 +157,18 @@ def generate(prg):
         asm.write("_start:\n")
         for ip in range(len(program)):
             op = program[ip]
+            asm.write(f"address_{ip}:\n")
             if op.type == PUSH:
                 asm.write(f"    ; -- PUSH {str(op.value)} --\n")
                 asm.write(f"    push {str(op.value)}\n")
             elif op.type == PLUS:
-                asm.write(f"    ; -- Operation(PLUS) --\n")
+                asm.write(f"    ; -- PLUS --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    add rax, rbx\n") # add registers
                 asm.write(f"    push rax\n")
             elif op.type == MINUS:
-                asm.write(f"    ; -- Operation(MINUS) --\n")
+                asm.write(f"    ; -- MINUS --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    sub rbx, rax\n") # substract registers
@@ -195,12 +214,18 @@ def generate(prg):
                 asm.write(f"    jmp address_{op.value}\n")
                 asm.write(f"address_{ip+1}:\n")
             elif op.type == END:
-                asm.write(f"address_{ip}:\n")
+                if ip + 1 != op.value:
+                    asm.write(f"    jmp address_{op.value}\n")
             elif op.type == DUPLICATE:
                 asm.write(f"    ; -- DUPLICATE --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    push rax\n")
                 asm.write(f"    push rax\n")
+            elif op.type == DO:
+                asm.write(f"    ; -- WHILE DO --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    test rax, rax\n")
+                asm.write(f"    jz address_{op.value}\n")
 
         asm.write("    mov rax, 60\n")
         asm.write("    mov rdi, 0\n")
