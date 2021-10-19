@@ -2,21 +2,11 @@
 import subprocess
 import sys
 
-# basic iota counter
-iotaCounter = 0
-def getIota(shouldReset=False):
-    global iotaCounter
-    if shouldReset:
-        iotaCounter = 0
-    iotaCounter += 1
-    return iotaCounter - 1
-
 # operations
-PUSH = getIota(True)
-PLUS = getIota()
-MINUS = getIota()
-DISPLAY = getIota()
-OPCOUNT = getIota()
+PUSH = 0
+PLUS = 1
+MINUS = 2
+DISPLAY = 3
 
 def push(x):
     return (PUSH, x)
