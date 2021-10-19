@@ -29,6 +29,26 @@ def minus():
 def display():
     return (DISPLAY, )
 
+# parser
+def parse(data):
+    operations = []
+    data = data.split()
+    for word in data:
+        try:
+            if word in ("","\n","\t"):
+                continue
+            if word == "+":
+                operations.append(plus())
+            elif word == "-":
+                operations.append(minus())
+            elif word.lower() == "display":
+                operations.append(display())
+            else:
+                operations.append(push(int(word)))
+        except:
+            print(f"Syntax Error! {word}")
+    return operations
+
 # generator
 def generate(prg):
     with open("_tmp.asm", "w") as asm:
@@ -73,43 +93,34 @@ def generate(prg):
 
         for op in prg:
             if op[0] == PUSH:
-                asm.write(f"   ; -- PUSH {str(op[1])} --\n")
-                asm.write(f"   push {str(op[1])}\n")
+                asm.write(f"    ; -- PUSH {str(op[1])} --\n")
+                asm.write(f"    push {str(op[1])}\n")
             if op[0] == PLUS:
-                asm.write(f"   ; -- PLUS --\n")
-                asm.write(f"   pop rax\n")
-                asm.write(f"   pop rbx\n")
-                asm.write(f"   add rax, rbx\n")
-                asm.write(f"   push rax\n")
+                asm.write(f"    ; -- PLUS --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    add rax, rbx\n")
+                asm.write(f"    push rax\n")
             if op[0] == MINUS:
-                asm.write(f"   ; -- MINUS --\n")
-                asm.write(f"   pop rax\n")
-                asm.write(f"   pop rbx\n")
-                asm.write(f"   sub rbx, rax\n")
-                asm.write(f"   push rbx\n")
+                asm.write(f"    ; -- MINUS --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    sub rbx, rax\n")
+                asm.write(f"    push rbx\n")
             if op[0] == DISPLAY:
-                asm.write(f"   ; -- DISPLAY --\n")
-                asm.write(f"   pop rdi\n")
-                asm.write(f"   call display\n")
+                asm.write(f"    ; -- DISPLAY --\n")
+                asm.write(f"    pop rdi\n")
+                asm.write(f"    call display\n")
 
-        asm.write(" mov rax, 60\n")
-        asm.write(" mov rdi, 0\n")
-        asm.write(" syscall\n")
+        asm.write("    mov rax, 60\n")
+        asm.write("    mov rdi, 0\n")
+        asm.write("    syscall\n")
 
     subprocess.call(["nasm", "-felf64", "_tmp.asm"])
     subprocess.call(["ld", "-o", "program" , "_tmp.o"])
 
 # program
 
-program = [
-    push(10),
-    push(2),
-    minus(),
-    display(),
-    push(10),
-    push(2),
-    plus(),
-    display(),
-]
+program = parse(open("test.mlsrc", "r").read())
 
 generate(program)
