@@ -35,36 +35,44 @@ def parse(data):
     operations = []
     data = data.split()
     errors = 0
+    startedComment = 0
     for word in data:
         try:
-            if word in ("","\n","\t"):
-                continue
-            if word == "+":
-                operations.append(Operation(PLUS))
-            elif word == "-":
-                operations.append(Operation(MINUS))
-            elif word == "=":
-                operations.append(Operation(EQUAL))
-            elif word == "<":
-                operations.append(Operation(LESS))
-            elif word == ">":
-                operations.append(Operation(GREATER))
-            elif word.lower() == "display" or word.lower() == "disp":
-                operations.append(Operation(DISPLAY))
-            elif word.lower() == "if":
-                operations.append(Operation(IF))
-            elif word.lower() == "while":
-                operations.append(Operation(WHILE))
-            elif word.lower() == "do":
-                operations.append(Operation(DO))
-            elif word.lower() == "end":
-                operations.append(Operation(END))
-            elif word.lower() == "else":
-                operations.append(Operation(ELSE))
-            elif word.lower() == "duplicate" or word.lower() == "dp":
-                operations.append(Operation(DUPLICATE))
+            if startedComment == 0:
+                if word in "" or word in "\t" or word in "\n":
+                    continue
+                if word[0] == "#":
+                    startedComment = 1
+                    continue
+                if word == "+":
+                    operations.append(Operation(PLUS))
+                elif word == "-":
+                    operations.append(Operation(MINUS))
+                elif word == "=":
+                    operations.append(Operation(EQUAL))
+                elif word == "<":
+                    operations.append(Operation(LESS))
+                elif word == ">":
+                    operations.append(Operation(GREATER))
+                elif word.lower() == "display" or word.lower() == "disp":
+                    operations.append(Operation(DISPLAY))
+                elif word.lower() == "if":
+                    operations.append(Operation(IF))
+                elif word.lower() == "while":
+                    operations.append(Operation(WHILE))
+                elif word.lower() == "do":
+                    operations.append(Operation(DO))
+                elif word.lower() == "end":
+                    operations.append(Operation(END))
+                elif word.lower() == "else":
+                    operations.append(Operation(ELSE))
+                elif word.lower() == "duplicate" or word.lower() == "dp":
+                    operations.append(Operation(DUPLICATE))
+                else:
+                    operations.append(Operation(PUSH,int(word)))
             else:
-                operations.append(Operation(PUSH,int(word)))
+                if "#" in word:
+                    startedComment = 0
         except:
             Error("ParsingError",f"Unknown operation '{word}'")
             errors += 1

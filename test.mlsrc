@@ -1,7 +1,5 @@
 10
-while dp 0 > do
-    dp disp
-    1 -
+while dp 0 > do # while 10 is larger than 0 #
+    dp disp # display #
+    1 - # substract #
 end
-
-9999999 disp
