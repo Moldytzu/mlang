@@ -16,6 +16,8 @@ IF = 5
 END = 6
 ELSE = 7
 DUPLICATE = 8
+GREATER = 9
+LESS = 10
 
 class Operation():
     type = None
@@ -39,6 +41,10 @@ def parse(data):
                 operations.append(Operation(MINUS))
             elif word == "=":
                 operations.append(Operation(EQUAL))
+            elif word == "<":
+                operations.append(Operation(LESS))
+            elif word == ">":
+                operations.append(Operation(GREATER))
             elif word.lower() == "display":
                 operations.append(Operation(DISPLAY))
             elif word.lower() == "if":
@@ -159,7 +165,25 @@ def generate(prg):
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    cmp rax, rbx\n")
-                asm.write(f"    cmove r10, r11\n") # move only if eq flag is set
+                asm.write(f"    cmove r10, r11\n")
+                asm.write(f"    push r10\n")
+            elif op.type == GREATER:
+                asm.write(f"    ; -- GREATER --\n")
+                asm.write(f"    mov r10, 0\n")
+                asm.write(f"    mov r11, 1\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    cmp rbx, rax\n")
+                asm.write(f"    cmovg r10, r11\n")
+                asm.write(f"    push r10\n")
+            elif op.type == LESS:
+                asm.write(f"    ; -- LESS --\n")
+                asm.write(f"    mov r10, 0\n")
+                asm.write(f"    mov r11, 1\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    cmp rbx, rax\n")
+                asm.write(f"    cmovl r10, r11\n")
                 asm.write(f"    push r10\n")
             elif op.type == IF:
                 asm.write(f"    ; -- IF --\n")
