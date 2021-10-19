@@ -15,6 +15,7 @@ EQUAL = 4
 IF = 5
 END = 6
 ELSE = 7
+DUPLICATE = 8
 
 class Operation():
     type = None
@@ -46,6 +47,8 @@ def parse(data):
                 operations.append(Operation(ELSE))
             elif word.lower() == "end":
                 operations.append(Operation(END))
+            elif word.lower() == "duplicate" or word.lower() == "dp":
+                operations.append(Operation(DUPLICATE))
             else:
                 operations.append(Operation(PUSH,int(word)))
         except:
@@ -169,6 +172,11 @@ def generate(prg):
                 asm.write(f"address_{ip+1}:\n")
             elif op.type == END:
                 asm.write(f"address_{ip}:\n")
+            elif op.type == DUPLICATE:
+                asm.write(f"    ; -- DUPLICATE --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    push rax\n")
+                asm.write(f"    push rax\n")
 
         asm.write("    mov rax, 60\n")
         asm.write("    mov rdi, 0\n")
