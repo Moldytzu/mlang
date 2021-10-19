@@ -34,6 +34,7 @@ def display():
 def parse(data):
     operations = []
     data = data.split()
+    errors = 0
     for word in data:
         try:
             if word in ("","\n","\t"):
@@ -48,7 +49,11 @@ def parse(data):
                 operations.append(push(int(word)))
         except:
             print(f"Syntax Error! {word}")
-    return operations
+            errors += 1
+    if errors == 0:
+        return operations
+    else:
+        return []
 
 # generator
 def generate(prg):
