@@ -2,6 +2,10 @@
 import subprocess
 import sys
 
+#utils
+def Error(name,details):
+    print(name + ": " + details)
+
 # operations
 PUSH = 0
 PLUS = 1
@@ -45,7 +49,7 @@ def parse(data):
             else:
                 operations.append(Operation(PUSH,int(word)))
         except:
-            print(f"Syntax Error! {word}")
+            Error("ParsingError",f"Unknown operation '{word}'")
             errors += 1
     if errors == 0:
         return operations
@@ -53,7 +57,6 @@ def parse(data):
         return []
 
 # generator
-
 def crossreference_blocks(program):
     stack = []
     errors = 0
@@ -67,7 +70,7 @@ def crossreference_blocks(program):
                 program[if_ip] = Operation(IF, ip + 1)
                 stack.append(ip)
             except:
-                print("SyntaxError! Else used outside of if blocks")
+                Error("SyntaxError","Else used outside if block")
                 errors += 1
         elif op.type == END:
             try:
@@ -75,7 +78,7 @@ def crossreference_blocks(program):
                 if program[block_ip].type == IF or program[block_ip].type == ELSE:
                     program[block_ip] = Operation(program[block_ip].type, ip)
             except:
-                print("SyntaxError! End used without needing to close an if block")
+                Error("SyntaxError","End used without needing to close an if block")
                 errors += 1
     if errors == 0:
         return program
