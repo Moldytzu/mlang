@@ -176,9 +176,13 @@ def generate(prg):
                 asm.write(f"    ; -- IF --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    test rax, rax\n")
-                asm.write(f"    jz endif_{op[1]}\n")
+                asm.write(f"    jz address_{op[1]}\n")
+            elif op[0] == ELSE:
+                asm.write(f"    ; -- ELSE --\n")
+                asm.write(f"    jmp address_{op[1]}\n")
+                asm.write(f"address_{ip+1}:\n")
             elif op[0] == END:
-                asm.write(f"endif_{ip}:\n")
+                asm.write(f"address_{ip}:\n")
 
         asm.write("    mov rax, 60\n")
         asm.write("    mov rdi, 0\n")
