@@ -1,5 +1,6 @@
 # mlang
 import subprocess
+import sys
 
 # basic iota counter
 iotaCounter = 0
@@ -121,6 +122,10 @@ def generate(prg):
 
 # program
 
-program = parse(open("test.mlsrc", "r").read())
+if len(sys.argv) < 2:
+    print("Not enough arguments!")
+    exit(-1)
+
+program = parse(open(sys.argv[1], "r").read())
 
 generate(program)
