@@ -1,10 +1,7 @@
-0 while dp 10 < do # enumerate first 10 characters and add those in the memory#
-    memory dp 'A' + store m+
-    dp 1 +
-end
+%standard.mlsrc%
 
-memory 10 store m+ # end line #
+memory 'B' store m+
 
-11 # count #
-memory 11 - # buffer #
-display # display #
+1
+memory 1 -
+display # display the character #

@@ -1,6 +1,8 @@
 # mlang
+from os import error
 import subprocess
 import sys
+import string
 
 #utils
 def Error(name,details):
@@ -106,7 +108,7 @@ def parse(data):
     else:
         return []
 
-# generator
+# preprocessor
 def crossreference_blocks(program):
     stack = []
     errors = 0
@@ -143,6 +145,56 @@ def crossreference_blocks(program):
         return program
     else:
         return []
+
+def replacer(s, newstring, index, nofail=False):
+    # raise an error if index is outside of the string
+    if not nofail and index not in range(len(s)):
+        raise ValueError("index outside given string")
+
+    # if not erroring, but the index is still not in the correct range..
+    if index < 0:  # add it to the beginning
+        return newstring + s
+    if index > len(s):  # add it to the end
+        return s + newstring
+
+    # insert the new string between "slices" of the original
+    return s[:index] + newstring + s[index + 1:]
+
+def preprocessor(data):
+    index = 0
+    string = ""
+    instr = 0
+    startindex = 0
+    toinclude = []
+    errors = 0
+    while index < len(data):
+        if string == "%" and instr == 0:
+            instr = 1
+            string = ""
+            startindex = index
+        elif string[-1:] == "%" and instr == 1:
+            instr = 0
+            toinclude.append(((data[startindex:index-1]),(startindex-1,index)))
+            string = ""
+        elif string in ("\n", " "):
+            string = ""
+        string += data[index]
+        index += 1
+
+    for file in toinclude:
+        data = (data.replace("%"+file[0]+"%", " ", len(file[0])))
+
+    for file in toinclude:
+        try:
+            data = open(toinclude[0][0],"r").read() + data
+        except:
+            Error("IncludeError",f"'{file[0]}' not found!")
+            errors += 1
+
+    if errors == 0:
+        return data
+    else:
+        return ""
 
 def generate(prg):
     if prg == []:
@@ -323,6 +375,6 @@ if len(sys.argv) < 2:
     print("Not enough arguments!")
     exit(-1)
 
-program = crossreference_blocks(parse(open(sys.argv[1], "r").read()))
+program = crossreference_blocks(parse(preprocessor(open(sys.argv[1], "r").read())))
 
 generate(program)
