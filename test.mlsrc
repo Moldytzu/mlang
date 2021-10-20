@@ -1,4 +1,14 @@
-memory 97 store
-memory 98 store
-memory 99 store
-memory 100 store
+0 while dp 4 < do # push values from 0 to 3 on memory #
+    dp 1 +
+    memory dp store m+
+end
+
+0 while dp 4 < do
+    dp 1 +
+    m-
+end
+
+0 while dp 4 < do
+    dp 1 +
+    memory load display m+
+end

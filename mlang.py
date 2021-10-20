@@ -23,6 +23,8 @@ DO = 12
 MEM = 13
 STORE = 14
 LOAD = 15
+MEMINC = 16
+MEMDEC = 17
 
 class Operation():
     type = None
@@ -76,7 +78,11 @@ def parse(data):
                 elif word.lower() == "store" or word.lower() == "ste":
                     operations.append(Operation(STORE))   
                 elif word.lower() == "load" or word.lower() == "lod":
-                    operations.append(Operation(LOAD))   
+                    operations.append(Operation(LOAD)) 
+                elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
+                    operations.append(Operation(MEMINC)) 
+                elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
+                    operations.append(Operation(MEMDEC))   
                 else:
                     operations.append(Operation(PUSH,int(word)))
             else:
@@ -99,31 +105,30 @@ def crossreference_blocks(program):
         if op.type == IF:
             stack.append(ip)
         elif op.type == ELSE:
-            try:
-                if_ip = stack.pop()
-                program[if_ip] = Operation(IF, ip + 1)
-                stack.append(ip)
-            except:
-                Error("SyntaxError","Else used outside if block")
+            if_ip = stack.pop()
+            if program[if_ip].type != IF:
+                Error("SyntaxError", "Else should be used only in if blocks")
                 errors += 1
+            program[if_ip].value = ip + 1
+            stack.append(ip)
         elif op.type == END:
-            try:
-                block_ip = stack.pop()
-                if program[block_ip].type == IF or program[block_ip].type == ELSE:
-                    program[block_ip] = Operation(program[block_ip].type, ip)
-                    program[ip] = Operation(END, ip+1)
-                elif program[block_ip].type == DO:
-                    program[ip] = Operation(END, program[block_ip].value)
-                    program[block_ip] = Operation(DO, ip + 1)
-            except:
-                Error("SyntaxError","End used without needing to close an if or while blocks")
+            block_ip = stack.pop()
+            if program[block_ip].type == IF or program[block_ip].type == ELSE:
+                program[block_ip].value = ip
+                program[ip].value = ip + 1
+            elif program[block_ip].type == DO:
+                program[ip].value = program[block_ip].value
+                program[block_ip].value = ip + 1
+            else:
+                Error("SyntaxError", "End should be used only to close if and while blocks")
                 errors += 1
+                exit(1)
         elif op.type == WHILE:
             stack.append(ip)
         elif op.type == DO:
-            program[ip] = Operation(DO, stack.pop())
+            while_ip = stack.pop()
+            program[ip].value = while_ip
             stack.append(ip)
-
     if errors == 0:
         return program
     else:
@@ -252,7 +257,6 @@ def generate(prg):
                 asm.write(f"    ; -- MEMORY --\n")
                 asm.write(f"    mov rax, mem\n")
                 asm.write(f"    add rax, r15\n")
-                asm.write(f"    inc r15\n")
                 asm.write(f"    push rax\n")
             elif op.type == LOAD:
                 asm.write(f"    ; -- LOAD --\n")
@@ -265,6 +269,12 @@ def generate(prg):
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    mov [rax], bl\n")
+            elif op.type == MEMINC:
+                asm.write(f"   ; -- MEM+ -- \n")
+                asm.write(f"    inc r15\n")
+            elif op.type == MEMDEC:
+                asm.write(f"   ; -- MEM- -- \n")
+                asm.write(f"    dec r15\n")
 
         asm.write(f"address_{ip+1}:\n")
         asm.write("    mov rax, 60\n")
