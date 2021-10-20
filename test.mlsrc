@@ -1,14 +1,10 @@
-# abcd #
-0 while dp 255 < do
+0 while dp 10 < do # enumerate first 10 characters and add those in the memory#
+    memory dp 'A' + store m+
     dp 1 +
-    memory dp store m+
 end
 
-# go back 4 values #
-0 while dp 255 < do 
-    dp 1 +
-    m-
-end
+memory 10 store m+ # end line #
 
-0 0 255 memory 1 1 syscall
-0 0 0 0 100 60 syscall
+11 # count #
+memory 11 - # buffer #
+display # display #

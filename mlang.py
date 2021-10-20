@@ -10,7 +10,7 @@ def Error(name,details):
 PUSH = 0
 PLUS = 1
 MINUS = 2
-DISPLAY = 3
+DISPLAYI = 3
 EQUAL = 4
 IF = 5
 END = 6
@@ -26,6 +26,8 @@ LOAD = 15
 MEMINC = 16
 MEMDEC = 17
 SYSCALL = 18
+STRING  = 19
+DISPLAY = 20
 
 class Operation():
     type = None
@@ -50,6 +52,9 @@ def parse(data):
                 if word[0] == "#":
                     startedComment = 1
                     continue
+                if word[0] == "'" and word[-1] == "'":
+                    operations.append(Operation(PUSH,ord(word[1])))
+                    continue
                 if word == "+":
                     operations.append(Operation(PLUS))
                 elif word == "-":
@@ -60,6 +65,8 @@ def parse(data):
                     operations.append(Operation(LESS))
                 elif word == ">":
                     operations.append(Operation(GREATER))
+                elif word.lower() == "displayi" or word.lower() == "dispi":
+                    operations.append(Operation(DISPLAYI))
                 elif word.lower() == "display" or word.lower() == "disp":
                     operations.append(Operation(DISPLAY))
                 elif word.lower() == "if":
@@ -146,7 +153,7 @@ def generate(prg):
         # optimization: include display only if it's used
         displayIsUsed = 0
         for i in range(len(prg)):
-            if prg[i].type == DISPLAY:
+            if prg[i].type == DISPLAYI:
                 displayIsUsed = 1
         if displayIsUsed:
             asm.write("display:\n")
@@ -203,8 +210,8 @@ def generate(prg):
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    sub rbx, rax\n") # substract registers
                 asm.write(f"    push rbx\n")
-            elif op.type == DISPLAY:
-                asm.write(f"    ; -- DISPLAY --\n")
+            elif op.type == DISPLAYI:
+                asm.write(f"    ; -- DISPLAYI --\n")
                 asm.write(f"    pop rdi\n")
                 asm.write(f"    call display\n") # display
             elif op.type == EQUAL:
@@ -288,6 +295,17 @@ def generate(prg):
                 asm.write(f"   pop r8\n")
                 asm.write(f"   pop r9\n")
                 asm.write(f"   syscall\n")
+            elif op.type == DISPLAY:
+                asm.write(f"   ; -- DISPLAY -- \n")
+                asm.write(f"   mov rax, 1\n")
+                asm.write(f"   mov rdi, 1\n")
+                asm.write(f"   pop rsi\n")
+                asm.write(f"   pop rdx\n")
+                asm.write(f"   mov r10, 0\n")
+                asm.write(f"   mov r8, 0\n")
+                asm.write(f"   mov r9, 0\n")
+                asm.write(f"   syscall\n")
+
 
         asm.write(f"address_{ip+1}:\n")
         asm.write("    mov rax, 60\n")
