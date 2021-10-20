@@ -1,16 +1,14 @@
 # abcd #
-0 while dp 4 < do
+0 while dp 255 < do
     dp 1 +
-    memory dp 97 + store m+
+    memory dp store m+
 end
 
-memory dp 10 store m+
-
 # go back 4 values #
-0 while dp 5 < do 
+0 while dp 255 < do 
     dp 1 +
     m-
 end
 
-0 0 5 memory 1 1 syscall
+0 0 255 memory 1 1 syscall
 0 0 0 0 100 60 syscall
