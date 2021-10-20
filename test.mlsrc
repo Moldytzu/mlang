@@ -1,14 +1,15 @@
-0 while dp 4 < do # push values from 0 to 3 on memory #
+# abcd #
+0 while dp 4 < do
     dp 1 +
-    memory dp store m+
+    memory dp 97 + store m+
 end
 
-0 while dp 4 < do
+memory dp 10 store m+
+
+# go back 4 values #
+0 while dp 5 < do 
     dp 1 +
     m-
 end
 
-0 while dp 4 < do
-    dp 1 +
-    memory load display m+
-end
+0 0 5 memory 1 1 syscall

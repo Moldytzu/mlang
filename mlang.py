@@ -25,6 +25,7 @@ STORE = 14
 LOAD = 15
 MEMINC = 16
 MEMDEC = 17
+SYSCALL = 18
 
 class Operation():
     type = None
@@ -82,7 +83,9 @@ def parse(data):
                 elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
                     operations.append(Operation(MEMINC)) 
                 elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
-                    operations.append(Operation(MEMDEC))   
+                    operations.append(Operation(MEMDEC))
+                elif word.lower() == "syscall" or word.lower() == "sys" or word.lower() == "kcall":
+                    operations.append(Operation(SYSCALL))
                 else:
                     operations.append(Operation(PUSH,int(word)))
             else:
@@ -271,10 +274,20 @@ def generate(prg):
                 asm.write(f"    mov [rax], bl\n")
             elif op.type == MEMINC:
                 asm.write(f"   ; -- MEM+ -- \n")
-                asm.write(f"    inc r15\n")
+                asm.write(f"   inc r15\n")
             elif op.type == MEMDEC:
                 asm.write(f"   ; -- MEM- -- \n")
-                asm.write(f"    dec r15\n")
+                asm.write(f"   dec r15\n")
+            elif op.type == SYSCALL:
+                asm.write(f"   ; -- SYSCALL -- \n")
+                asm.write(f"   pop rax\n")
+                asm.write(f"   pop rdi\n")
+                asm.write(f"   pop rsi\n")
+                asm.write(f"   pop rdx\n")
+                asm.write(f"   pop r10\n")
+                asm.write(f"   pop r8\n")
+                asm.write(f"   pop r9\n")
+                asm.write(f"   syscall\n")
 
         asm.write(f"address_{ip+1}:\n")
         asm.write("    mov rax, 60\n")
