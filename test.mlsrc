@@ -1,5 +1,4 @@
-10
-while dp 0 > do # while 10 is larger than 0 #
-    dp disp # display #
-    1 - # substract #
-end
+memory 97 store
+memory 98 store
+memory 99 store
+memory 100 store

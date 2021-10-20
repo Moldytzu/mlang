@@ -20,6 +20,9 @@ GREATER = 9
 LESS = 10
 WHILE = 11
 DO = 12
+MEM = 13
+STORE = 14
+LOAD = 15
 
 class Operation():
     type = None
@@ -68,6 +71,12 @@ def parse(data):
                     operations.append(Operation(ELSE))
                 elif word.lower() == "duplicate" or word.lower() == "dp":
                     operations.append(Operation(DUPLICATE))
+                elif word.lower() == "memory" or word.lower() == "mem":
+                    operations.append(Operation(MEM))
+                elif word.lower() == "store" or word.lower() == "ste":
+                    operations.append(Operation(STORE))   
+                elif word.lower() == "load" or word.lower() == "lod":
+                    operations.append(Operation(LOAD))   
                 else:
                     operations.append(Operation(PUSH,int(word)))
             else:
@@ -126,40 +135,45 @@ def generate(prg):
         exit(0)
     with open("_tmp.asm", "w") as asm:
         asm.write("section .text\n")
-
-        asm.write("display:\n")
-        asm.write("    mov     r9, 0xCCCCCCCCCCCCCCCD\n")
-        asm.write("    sub     rsp, 40\n")
-        asm.write("    mov     BYTE [rsp+31], 10\n")
-        asm.write("    lea     rcx, [rsp+30]\n")
-        asm.write(".loop:\n")
-        asm.write("    mov     rax, rdi\n")
-        asm.write("    lea     r8, [rsp+32]\n")
-        asm.write("    mul     r9\n")
-        asm.write("    mov     rax, rdi\n")
-        asm.write("    sub     r8, rcx\n")
-        asm.write("    shr     rdx, 3\n")
-        asm.write("    lea     rsi, [rdx+rdx*4]\n")
-        asm.write("    add     rsi, rsi\n")
-        asm.write("    sub     rax, rsi\n")
-        asm.write("    add     eax, 48\n")
-        asm.write("    mov     BYTE [rcx], al\n")
-        asm.write("    mov     rax, rdi\n")
-        asm.write("    mov     rdi, rdx\n")
-        asm.write("    mov     rdx, rcx\n")
-        asm.write("    sub     rcx, 1\n")
-        asm.write("    cmp     rax, 9\n")
-        asm.write("    ja      .loop\n")
-        asm.write("    lea     rax, [rsp+32]\n")
-        asm.write("    mov     edi, 1\n")
-        asm.write("    sub     rdx, rax\n")
-        asm.write("    xor     eax, eax\n")
-        asm.write("    lea     rsi, [rsp+32+rdx]\n")
-        asm.write("    mov     rdx, r8\n")
-        asm.write("    mov     rax, 1\n")
-        asm.write("    syscall\n")
-        asm.write("    add     rsp, 40\n")
-        asm.write("    ret\n")
+        # optimization: include display only if it's used
+        displayIsUsed = 0
+        for i in range(len(prg)):
+            if prg[i].type == DISPLAY:
+                displayIsUsed = 1
+        if displayIsUsed:
+            asm.write("display:\n")
+            asm.write("    mov     r9, 0xCCCCCCCCCCCCCCCD\n")
+            asm.write("    sub     rsp, 40\n")
+            asm.write("    mov     BYTE [rsp+31], 10\n")
+            asm.write("    lea     rcx, [rsp+30]\n")
+            asm.write(".loop:\n")
+            asm.write("    mov     rax, rdi\n")
+            asm.write("    lea     r8, [rsp+32]\n")
+            asm.write("    mul     r9\n")
+            asm.write("    mov     rax, rdi\n")
+            asm.write("    sub     r8, rcx\n")
+            asm.write("    shr     rdx, 3\n")
+            asm.write("    lea     rsi, [rdx+rdx*4]\n")
+            asm.write("    add     rsi, rsi\n")
+            asm.write("    sub     rax, rsi\n")
+            asm.write("    add     eax, 48\n")
+            asm.write("    mov     BYTE [rcx], al\n")
+            asm.write("    mov     rax, rdi\n")
+            asm.write("    mov     rdi, rdx\n")
+            asm.write("    mov     rdx, rcx\n")
+            asm.write("    sub     rcx, 1\n")
+            asm.write("    cmp     rax, 9\n")
+            asm.write("    ja      .loop\n")
+            asm.write("    lea     rax, [rsp+32]\n")
+            asm.write("    mov     edi, 1\n")
+            asm.write("    sub     rdx, rax\n")
+            asm.write("    xor     eax, eax\n")
+            asm.write("    lea     rsi, [rsp+32+rdx]\n")
+            asm.write("    mov     rdx, r8\n")
+            asm.write("    mov     rax, 1\n")
+            asm.write("    syscall\n")
+            asm.write("    add     rsp, 40\n")
+            asm.write("    ret\n")
     
         asm.write("global _start\n")
         asm.write("_start:\n")
@@ -234,10 +248,30 @@ def generate(prg):
                 asm.write(f"    pop rax\n")
                 asm.write(f"    test rax, rax\n")
                 asm.write(f"    jz address_{op.value}\n")
+            elif op.type == MEM:
+                asm.write(f"    ; -- MEMORY --\n")
+                asm.write(f"    mov rax, mem\n")
+                asm.write(f"    add rax, r15\n")
+                asm.write(f"    inc r15\n")
+                asm.write(f"    push rax\n")
+            elif op.type == LOAD:
+                asm.write(f"    ; -- LOAD --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    xor rbx,rbx\n")
+                asm.write(f"    mov bl, [rax]\n")
+                asm.write(f"    push rbx\n")
+            elif op.type == STORE:
+                asm.write(f"    ; -- STORE --\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    mov [rax], bl\n")
 
+        asm.write(f"address_{ip+1}:\n")
         asm.write("    mov rax, 60\n")
         asm.write("    mov rdi, 0\n")
         asm.write("    syscall\n")
+        asm.write("\nsection .bss\n")
+        asm.write(f"mem resb 640000")
 
     subprocess.call(["nasm", "-felf64", "_tmp.asm"])
     subprocess.call(["ld", "-o", "program" , "_tmp.o"])
