@@ -1,3 +1,0 @@
-%macro stB
-    memory 'B' store m+
-%macro

@@ -7,11 +7,20 @@ import re
 def Error(name,details):
     print(name + ": " + details)
 
+def findallMatches(expression,data):
+    ret = []
+    c = re.compile(expression)
+    for m in c.finditer(data):
+        groups = (len(m.groups()[0].split("%")))
+        for idx in range(groups):
+            ret.append((m.groups()[idx],m.span(idx)))
+    return ret
+
 # operations
 PUSH = 0
 PLUS = 1
 MINUS = 2
-DISPLAYI = 3
+DISPLAI = 3
 EQUAL = 4
 IF = 5
 END = 6
@@ -28,7 +37,7 @@ MEMINC = 16
 MEMDEC = 17
 SYSCALL = 18
 STRING  = 19
-DISPLAY = 20
+SWAP = 20
 
 class Operation():
     type = None
@@ -66,10 +75,8 @@ def parse(data):
                     operations.append(Operation(LESS))
                 elif word == ">":
                     operations.append(Operation(GREATER))
-                elif word.lower() == "displayi" or word.lower() == "dispi":
-                    operations.append(Operation(DISPLAYI))
-                elif word.lower() == "display" or word.lower() == "disp":
-                    operations.append(Operation(DISPLAY))
+                elif word.lower() == "displai" or word.lower() == "dispi":
+                    operations.append(Operation(DISPLAI))
                 elif word.lower() == "if":
                     operations.append(Operation(IF))
                 elif word.lower() == "while":
@@ -88,6 +95,8 @@ def parse(data):
                     operations.append(Operation(STORE))   
                 elif word.lower() == "load" or word.lower() == "lod":
                     operations.append(Operation(LOAD)) 
+                elif word.lower() == "swap" or word.lower() == "swp":
+                    operations.append(Operation(SWAP)) 
                 elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
                     operations.append(Operation(MEMINC)) 
                 elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
@@ -145,15 +154,6 @@ def crossreference_blocks(program):
     else:
         return []
 
-def findallMatches(expression,data):
-    ret = []
-    c = re.compile(expression)
-    for m in c.finditer(data):
-        groups = (len(m.groups()[0].split("%")))
-        for idx in range(groups):
-            ret.append((m.groups()[idx],m.span(idx)))
-    return ret
-
 def processIncludes(data):
     toinclude = findallMatches(r'(?s)\%include \'(.*?)\'',data)
 
@@ -185,13 +185,9 @@ def processMacros(data):
         macros.append((name,content,range))
         data = data.replace(m[0],"").replace("%macro","")
 
-    print(macros)
-
     # replace macros
     for m in macros:
         data = data.replace(m[0],m[1])
-
-    print(data)
 
     return data
 
@@ -208,11 +204,11 @@ def generate(prg):
     with open("_tmp.asm", "w") as asm:
         asm.write("section .text\n")
         # optimization: include display only if it's used
-        displayIsUsed = 0
+        displaisUsed = 0
         for i in range(len(prg)):
-            if prg[i].type == DISPLAYI:
-                displayIsUsed = 1
-        if displayIsUsed:
+            if prg[i].type == DISPLAI:
+                displaisUsed = 1
+        if displaisUsed:
             asm.write("display:\n")
             asm.write("    mov     r9, 0xCCCCCCCCCCCCCCCD\n")
             asm.write("    sub     rsp, 40\n")
@@ -267,8 +263,8 @@ def generate(prg):
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    sub rbx, rax\n") # substract registers
                 asm.write(f"    push rbx\n")
-            elif op.type == DISPLAYI:
-                asm.write(f"    ; -- DISPLAYI --\n")
+            elif op.type == DISPLAI:
+                asm.write(f"    ; -- displai --\n")
                 asm.write(f"    pop rdi\n")
                 asm.write(f"    call display\n") # display
             elif op.type == EQUAL:
@@ -352,17 +348,12 @@ def generate(prg):
                 asm.write(f"   pop r8\n")
                 asm.write(f"   pop r9\n")
                 asm.write(f"   syscall\n")
-            elif op.type == DISPLAY:
-                asm.write(f"   ; -- DISPLAY -- \n")
-                asm.write(f"   mov rax, 1\n")
-                asm.write(f"   mov rdi, 1\n")
-                asm.write(f"   pop rsi\n")
-                asm.write(f"   pop rdx\n")
-                asm.write(f"   mov r10, 0\n")
-                asm.write(f"   mov r8, 0\n")
-                asm.write(f"   mov r9, 0\n")
-                asm.write(f"   syscall\n")
-
+            elif op.type == SWAP:
+                asm.write(f"   ; -- SWAP -- \n")
+                asm.write(f"   pop rax\n")
+                asm.write(f"   pop rbx\n")
+                asm.write(f"   push rax\n")
+                asm.write(f"   push rbx\n")
 
         asm.write(f"address_{ip+1}:\n")
         asm.write("    mov rax, 60\n")

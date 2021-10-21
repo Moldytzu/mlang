@@ -1,7 +1,8 @@
-%include 'standard.mlsrc'
+%include 'stdlib/standard.mlsrc'
 
-stB
-
-1
-memory 1 -
-display # display the character #
+'A' pushMemory display
+'B' pushMemory display
+'C' pushMemory display
+'D' pushMemory display
+10  pushMemory display
+popMemory displai
