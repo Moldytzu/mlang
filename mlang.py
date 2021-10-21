@@ -149,11 +149,9 @@ def crossreference_blocks(program):
 def processIncludes(data):
     toinclude = findallMatches(r'(?s)\%include \'(.*?)\'',data)
 
-    for file in toinclude:
-        data = (data.replace("%include '"+file[0]+"'", " ", len(file[0])))
-
     errors = 0
     for file in toinclude:
+        data = (data.replace("%include '"+file[0]+"'", " ", len(file[0])))
         try:
             data = open(toinclude[0][0],"r").read() + data
         except:
