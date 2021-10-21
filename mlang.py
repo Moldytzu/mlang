@@ -53,61 +53,53 @@ def parse(data):
     operations = []
     data = data.split()
     errors = 0
-    startedComment = 0
     for word in data:
         try:
-            if startedComment == 0:
-                if word in "" or word in "\t" or word in "\n":
-                    continue
-                if word[0] == "#":
-                    startedComment = 1
-                    continue
-                if word[0] == "'" and word[-1] == "'":
-                    operations.append(Operation(PUSH,ord(word[1])))
-                    continue
-                if word == "+":
-                    operations.append(Operation(PLUS))
-                elif word == "-":
-                    operations.append(Operation(MINUS))
-                elif word == "=":
-                    operations.append(Operation(EQUAL))
-                elif word == "<":
-                    operations.append(Operation(LESS))
-                elif word == ">":
-                    operations.append(Operation(GREATER))
-                elif word.lower() == "displai" or word.lower() == "dispi":
-                    operations.append(Operation(DISPLAI))
-                elif word.lower() == "if":
-                    operations.append(Operation(IF))
-                elif word.lower() == "while":
-                    operations.append(Operation(WHILE))
-                elif word.lower() == "do":
-                    operations.append(Operation(DO))
-                elif word.lower() == "end":
-                    operations.append(Operation(END))
-                elif word.lower() == "else":
-                    operations.append(Operation(ELSE))
-                elif word.lower() == "duplicate" or word.lower() == "dp":
-                    operations.append(Operation(DUPLICATE))
-                elif word.lower() == "memory" or word.lower() == "mem":
-                    operations.append(Operation(MEM))
-                elif word.lower() == "store" or word.lower() == "ste":
-                    operations.append(Operation(STORE))   
-                elif word.lower() == "load" or word.lower() == "lod":
-                    operations.append(Operation(LOAD)) 
-                elif word.lower() == "swap" or word.lower() == "swp":
-                    operations.append(Operation(SWAP)) 
-                elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
-                    operations.append(Operation(MEMINC)) 
-                elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
-                    operations.append(Operation(MEMDEC))
-                elif word.lower() == "syscall" or word.lower() == "sys" or word.lower() == "kcall":
-                    operations.append(Operation(SYSCALL))
-                else:
-                    operations.append(Operation(PUSH,int(word)))
+            if word in "" or word in "\t" or word in "\n":
+                continue
+            if word[0] == "'" and word[-1] == "'":
+                operations.append(Operation(PUSH,ord(word[1])))
+                continue
+            if word == "+":
+                operations.append(Operation(PLUS))
+            elif word == "-":
+                operations.append(Operation(MINUS))
+            elif word == "=":
+                operations.append(Operation(EQUAL))
+            elif word == "<":
+                operations.append(Operation(LESS))
+            elif word == ">":
+                operations.append(Operation(GREATER))
+            elif word.lower() == "displai" or word.lower() == "dispi":
+                operations.append(Operation(DISPLAI))
+            elif word.lower() == "if":
+                operations.append(Operation(IF))
+            elif word.lower() == "while":
+                operations.append(Operation(WHILE))
+            elif word.lower() == "do":
+                operations.append(Operation(DO))
+            elif word.lower() == "end":
+                operations.append(Operation(END))
+            elif word.lower() == "else":
+                operations.append(Operation(ELSE))
+            elif word.lower() == "duplicate" or word.lower() == "dp":
+                operations.append(Operation(DUPLICATE))
+            elif word.lower() == "memory" or word.lower() == "mem":
+                operations.append(Operation(MEM))
+            elif word.lower() == "store" or word.lower() == "ste":
+                operations.append(Operation(STORE))   
+            elif word.lower() == "load" or word.lower() == "lod":
+                operations.append(Operation(LOAD)) 
+            elif word.lower() == "swap" or word.lower() == "swp":
+                operations.append(Operation(SWAP)) 
+            elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
+                operations.append(Operation(MEMINC)) 
+            elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
+                operations.append(Operation(MEMDEC))
+            elif word.lower() == "syscall" or word.lower() == "sys" or word.lower() == "kcall":
+                operations.append(Operation(SYSCALL))
             else:
-                if "#" in word:
-                    startedComment = 0
+                operations.append(Operation(PUSH,int(word)))
         except:
             Error("ParsingError",f"Unknown operation '{word}'")
             errors += 1
@@ -191,8 +183,27 @@ def processMacros(data):
 
     return data
 
+def processComments(data):
+    commentMatches = findallMatches(r'(?s)#(.*?)#',data)
+    comments = []
+
+    # replace comments
+    for m in commentMatches:
+        name = m[0].split()[0]
+        content = m[0][len(name)+1:].strip()
+        range = m[1]
+        comments.append((name,content,range))
+        data = data.replace(m[0],"").replace("#","")
+
+    # replace macros
+    for m in comments:
+        data = data.replace(m[0],m[1])
+
+    return data
+
 def preprocessor(data):
     data = processIncludes(data)
+    data = processComments(data)
     data = processMacros(data)
     return data
 
