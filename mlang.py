@@ -185,19 +185,10 @@ def processMacros(data):
 
 def processComments(data):
     commentMatches = findallMatches(r'(?s)#(.*?)#',data)
-    comments = []
 
     # replace comments
     for m in commentMatches:
-        name = m[0].split()[0]
-        content = m[0][len(name)+1:].strip()
-        range = m[1]
-        comments.append((name,content,range))
         data = data.replace(m[0],"").replace("#","")
-
-    # replace macros
-    for m in comments:
-        data = data.replace(m[0],m[1])
 
     return data
 
