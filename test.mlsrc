@@ -1,6 +1,6 @@
-%standard.mlsrc%
+%include 'standard.mlsrc'
 
-memory 'B' store m+
+stB
 
 1
 memory 1 -

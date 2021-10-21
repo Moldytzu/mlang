@@ -1,5 +1,3 @@
-memory 'A' store m+
-
-1
-memory 1 -
-display # display #
+%macro stB
+    memory 'B' store m+
+%macro

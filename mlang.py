@@ -1,8 +1,7 @@
 # mlang
-from os import error
 import subprocess
 import sys
-import string
+import re
 
 #utils
 def Error(name,details):
@@ -146,30 +145,22 @@ def crossreference_blocks(program):
     else:
         return []
 
+def findallMatches(expression,data):
+    ret = []
+    c = re.compile(expression)
+    for m in c.finditer(data):
+        groups = (len(m.groups()[0].split("%")))
+        for idx in range(groups):
+            ret.append((m.groups()[idx],m.span(idx)))
+    return ret
+
 def processIncludes(data):
-    index = 0
-    string = ""
-    instr = 0
-    startindex = 0
-    toinclude = []
-    errors = 0
-    while index < len(data):
-        if string == "%" and instr == 0:
-            instr = 1
-            string = ""
-            startindex = index
-        elif string[-1:] == "%" and instr == 1:
-            instr = 0
-            toinclude.append(((data[startindex:index-1]),(startindex-1,index)))
-            string = ""
-        elif string in ("\n", " "):
-            string = ""
-        string += data[index]
-        index += 1
+    toinclude = findallMatches(r'(?s)\%include \'(.*?)\'',data)
 
     for file in toinclude:
-        data = (data.replace("%"+file[0]+"%", " ", len(file[0])))
+        data = (data.replace("%include '"+file[0]+"'", " ", len(file[0])))
 
+    errors = 0
     for file in toinclude:
         try:
             data = open(toinclude[0][0],"r").read() + data
@@ -182,10 +173,34 @@ def processIncludes(data):
     else:
         return ""
 
-def preprocessor(data):
-    data = processIncludes(data)
+def processMacros(data):
+    macrosMatches = findallMatches(r'(?s)%macro (.*?)%macro',data)
+    macros = []
+
+    # replace macro statements
+    for m in macrosMatches:
+        name = m[0].split()[0]
+        content = m[0][len(name)+1:].strip()
+        range = m[1]
+        macros.append((name,content,range))
+        data = data.replace(m[0],"").replace("%macro","")
+
+    print(macros)
+
+    # replace macros
+    for m in macros:
+        data = data.replace(m[0],m[1])
+
+    print(data)
+
     return data
 
+def preprocessor(data):
+    data = processIncludes(data)
+    data = processMacros(data)
+    return data
+
+#generator
 def generate(prg):
     if prg == []:
         print("Generator: Nothing to generate!")
