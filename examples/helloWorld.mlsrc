@@ -1,0 +1,16 @@
+%include 'stdlib/standard.mlsrc'
+
+'H' pushMemory display
+'e' pushMemory display
+'l' pushMemory display
+'l' pushMemory display
+'o' pushMemory display
+',' pushMemory display
+32 pushMemory display # space #
+'W' pushMemory display
+'o' pushMemory display
+'r' pushMemory display
+'l' pushMemory display
+'d' pushMemory display
+'!' pushMemory display
+10 pushMemory display # \n #

@@ -1,11 +1,5 @@
 %macro display
-    0
-    0
-    1
-    memory
-    1
-    1
-    syscall
+    0 0 1 memory 1 1 syscall
 %macro
 
 %macro pushMemory
@@ -15,3 +9,6 @@
 %macro popMemory
     memory load
 %macro
+
+%macro newLine 10 %macro
+%macro space 32 %macro

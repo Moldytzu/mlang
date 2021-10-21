@@ -1,0 +1,6 @@
+%include 'stdlib/standard.mlsrc'
+
+%macro constantValue 'A' %macro
+
+constantValue pushMemory display
+newLine pushMemory display
