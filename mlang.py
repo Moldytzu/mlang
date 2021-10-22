@@ -16,6 +16,14 @@ def findallMatches(expression,data):
             ret.append((m.groups()[idx],m.span(idx)))
     return ret
 
+# options
+enableLinking = True
+verbose = False
+autoRun = False
+appendExit = True
+outputName = "program"
+entryName = "_start"
+
 # operations
 PUSH = 0
 PLUS = 1
@@ -55,60 +63,110 @@ def parse(data):
     operations = []
     data = data.split()
     errors = 0
+    if verbose:
+        print("Parsing")
     for word in data:
         try:
             if word in "" or word in "\t" or word in "\n":
                 continue
             if word[0] == "'" and word[-1] == "'":
+                if verbose:
+                    print("Appending PUSH with " + str(ord(word[1])))
                 operations.append(Operation(PUSH,ord(word[1])))
                 continue
             if word == "+":
+                if verbose:
+                    print("Appending PLUS")
                 operations.append(Operation(PLUS))
             elif word == "-":
+                if verbose:
+                    print("Appending MINUS")
                 operations.append(Operation(MINUS))
             elif word == "=":
+                if verbose:
+                    print("Appending EQUAL")
                 operations.append(Operation(EQUAL))
             elif word == "<":
+                if verbose:
+                    print("Appending LESS")
                 operations.append(Operation(LESS))
             elif word == ">":
+                if verbose:
+                    print("Appending GREATER")
                 operations.append(Operation(GREATER))
             elif word.lower() == "displai" or word.lower() == "dispi":
+                if verbose:
+                    print("Appending DISPLAI")
                 operations.append(Operation(DISPLAI))
             elif word.lower() == "if":
+                if verbose:
+                    print("Appending IF")
                 operations.append(Operation(IF))
             elif word.lower() == "while":
+                if verbose:
+                    print("Appending WHILE")
                 operations.append(Operation(WHILE))
             elif word.lower() == "do":
+                if verbose:
+                    print("Appending DO")
                 operations.append(Operation(DO))
             elif word.lower() == "end":
+                if verbose:
+                    print("Appending END")
                 operations.append(Operation(END))
             elif word.lower() == "else":
+                if verbose:
+                    print("Appending ELSE")
                 operations.append(Operation(ELSE))
             elif word.lower() == "duplicate" or word.lower() == "dp":
+                if verbose:
+                    print("Appending DUPLICATE")
                 operations.append(Operation(DUPLICATE))
             elif word.lower() == "memory" or word.lower() == "mem":
+                if verbose:
+                    print("Appending MEM")
                 operations.append(Operation(MEM))
             elif word.lower() == "store" or word.lower() == "ste":
+                if verbose:
+                    print("Appending STORE")
                 operations.append(Operation(STORE))   
             elif word.lower() == "load" or word.lower() == "lod":
+                if verbose:
+                    print("Appending LOAD")
                 operations.append(Operation(LOAD)) 
             elif word.lower() == "swap" or word.lower() == "swp":
+                if verbose:
+                    print("Appending SWAP")
                 operations.append(Operation(SWAP)) 
             elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
+                if verbose:
+                    print("Appending MEMINC")
                 operations.append(Operation(MEMINC)) 
             elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
+                if verbose:
+                    print("Appending MEMDEC")
                 operations.append(Operation(MEMDEC))
             elif word.lower() == "memoryindex" or word.lower() == "memidx" or word.lower() == "mi":
+                if verbose:
+                    print("Appending MEMINDEX")
                 operations.append(Operation(MEMINDEX))
             elif word.lower() == "memoryset" or word.lower() == "memset" or word.lower() == "ms":
+                if verbose:
+                    print("Appending MEMSET")
                 operations.append(Operation(MEMSET))
             elif word.lower() == "syscall" or word.lower() == "sys" or word.lower() == "kcall":
+                if verbose:
+                    print("Appending SYSCALL")
                 operations.append(Operation(SYSCALL))
             else:
+                if verbose:
+                    print("Appending PUSH with " + word)
                 operations.append(Operation(PUSH,int(word)))
         except:
             Error("ParsingError",f"Unknown operation '{word}'")
             errors += 1
+    if verbose:
+        print("Done, with " + str(errors) + " errors")
     if errors == 0:
         return operations
     else:
@@ -207,7 +265,9 @@ def generate(prg):
     if prg == []:
         print("Generator: Nothing to generate!")
         exit(0)
-    with open("_tmp.asm", "w") as asm:
+    if verbose:
+        print("Generating: " + str(prg))
+    with open(outputName + ".asm", "w") as asm:
         asm.write("section .text\n")
         # optimization: include display only if it's used
         displaisUsed = 0
@@ -249,8 +309,8 @@ def generate(prg):
             asm.write("    add     rsp, 40\n")
             asm.write("    ret\n")
     
-        asm.write("global _start\n")
-        asm.write("_start:\n")
+        asm.write("global " + entryName + "\n")
+        asm.write(entryName + ":\n")
         for ip in range(len(program)):
             op = program[ip]
             asm.write(f"address_{ip}:\n")
@@ -368,20 +428,72 @@ def generate(prg):
                 asm.write(f"   pop r15\n")
 
         asm.write(f"address_{ip+1}:\n")
-        asm.write("    mov rax, 60\n")
-        asm.write("    mov rdi, 0\n")
-        asm.write("    syscall\n")
+        if appendExit:
+            asm.write("    mov rax, 60\n")
+            asm.write("    mov rdi, 0\n")
+            asm.write("    syscall\n")
         asm.write("\nsection .bss\n")
-        asm.write(f"mem resb 640000")
+        asm.write(f"mem resb 64000")
+    
+    if verbose:
+        print("Done")
 
-    subprocess.call(["nasm", "-felf64", "_tmp.asm"])
-    subprocess.call(["ld", "-o", "program" , "_tmp.o"])
+    subprocess.call(["nasm", "-felf64", outputName + ".asm"])
+    if enableLinking:
+        subprocess.call(["ld", "-o", "program" , outputName + ".o"])
+
+    if autoRun and enableLinking:
+        if verbose:
+            print("Running " + sys.path[0] + "/" + outputName)
+        subprocess.call([sys.path[0] + "/" + outputName])
 
 # program
 
-if len(sys.argv) < 2:
-    print("Not enough arguments!")
-    exit(-1)
+def usage():
+    print("Usage: mlang.py <source file> [options]")
+    print("")
+    print("Aditional options:")
+    print("-a -> auto run program if compilation succeded")
+    print("-v -> verbose")
+    print("-l -> disable automatic linking")
+    print("-es -> disable the exit syscall on the end")
+    print("-e [entry name] -> change entry point name from _start to [entry name]")
+    print("-o [output name] -> output name")
+
+def parseArguments(args,argslen):
+    global enableLinking
+    global verbose
+    global autoRun
+    global appendExit
+    global outputName
+    global entryName
+    # parse arguments
+    if argslen < 2:
+        print("Not enough arguments!")
+        usage()
+        exit(-1)
+
+    if argslen > 2:
+        for idx in range(2,argslen):
+            if args[idx] == "-a":
+                autoRun = True
+            elif args[idx] == "-v":
+                verbose = True
+            elif args[idx] == "-l":
+                enableLinking = False
+            elif args[idx] == "-es":
+                appendExit = False
+            elif args[idx] == "-e":
+                if idx < argslen:
+                    entryName = args[idx+1]
+            elif args[idx] == "-o":
+                if idx < argslen:
+                    outputName = args[idx+1]
+
+arguments = sys.argv
+argumentsLen = len(sys.argv)
+
+parseArguments(arguments, argumentsLen)
 
 program = crossreference_blocks(parse(preprocessor(open(sys.argv[1], "r").read())))
 
