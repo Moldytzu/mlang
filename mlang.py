@@ -51,6 +51,8 @@ SYSCALL = 18
 SWAP = 19
 MEMINDEX = 20
 MEMSET = 21
+MULTIPLY = 22
+DIVIDE = 23
 
 class Operation():
     type = None
@@ -80,6 +82,12 @@ def parse(data):
             elif word == "-":
                 doVerbose("Appending MINUS")
                 operations.append(Operation(MINUS))
+            elif word == "*":
+                doVerbose("Appending MULTIPLY")
+                operations.append(Operation(MULTIPLY))
+            elif word == "/":
+                doVerbose("Appending DIVIDE")
+                operations.append(Operation(DIVIDE))
             elif word == "=":
                 doVerbose("Appending EQUAL")
                 operations.append(Operation(EQUAL))
@@ -403,6 +411,19 @@ def generate(prg):
             elif op.type == MEMSET:
                 asm.write(f"   ; -- MEMSET -- \n")
                 asm.write(f"   pop r15\n") # pop index
+            elif op.type == MULTIPLY:
+                asm.write(f"    ; -- MULTIPLY --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    mul rbx\n") # multiply registers
+                asm.write(f"    push rax\n")
+            elif op.type == DIVIDE:
+                asm.write(f"    ; -- DIVIDE --\n")
+                asm.write(f"    mov rdx, 0\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    div rbx\n") # divide registers
+                asm.write(f"    push rax\n")
 
         asm.write(f"address_{ip+1}:\n")
         if appendExit:
