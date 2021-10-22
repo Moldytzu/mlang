@@ -38,6 +38,8 @@ MEMDEC = 17
 SYSCALL = 18
 STRING  = 19
 SWAP = 20
+MEMINDEX = 21
+MEMSET = 22
 
 class Operation():
     type = None
@@ -96,6 +98,10 @@ def parse(data):
                 operations.append(Operation(MEMINC)) 
             elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
                 operations.append(Operation(MEMDEC))
+            elif word.lower() == "memoryindex" or word.lower() == "memidx" or word.lower() == "mi":
+                operations.append(Operation(MEMINDEX))
+            elif word.lower() == "memoryset" or word.lower() == "memset" or word.lower() == "ms":
+                operations.append(Operation(MEMSET))
             elif word.lower() == "syscall" or word.lower() == "sys" or word.lower() == "kcall":
                 operations.append(Operation(SYSCALL))
             else:
@@ -354,6 +360,12 @@ def generate(prg):
                 asm.write(f"   pop rbx\n")
                 asm.write(f"   push rax\n")
                 asm.write(f"   push rbx\n")
+            elif op.type == MEMINDEX:
+                asm.write(f"   ; -- MEMINDEX -- \n")
+                asm.write(f"   push r15\n")
+            elif op.type == MEMSET:
+                asm.write(f"   ; -- MEMSET -- \n")
+                asm.write(f"   pop r15\n")
 
         asm.write(f"address_{ip+1}:\n")
         asm.write("    mov rax, 60\n")
