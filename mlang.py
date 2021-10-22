@@ -48,10 +48,9 @@ LOAD = 15
 MEMINC = 16
 MEMDEC = 17
 SYSCALL = 18
-STRING  = 19
-SWAP = 20
-MEMINDEX = 21
-MEMSET = 22
+SWAP = 19
+MEMINDEX = 20
+MEMSET = 21
 
 class Operation():
     type = None
