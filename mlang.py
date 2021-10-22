@@ -232,7 +232,8 @@ def processComments(data):
     return data
 
 def preprocessor(data):
-    data = processIncludes(data)
+    while data.__contains__("%include"): # check all includes
+        data = processIncludes(data)
     data = processComments(data)
     data = processMacros(data)
     return data
