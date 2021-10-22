@@ -66,9 +66,8 @@ def parse(data):
         print("Parsing")
     for word in data:
         try:
-            if word in "" or word in "\t" or word in "\n":
-                continue
-            if word[0] == "'" and word[-1] == "'":
+            if word in ("","\t","\n"): continue # whitespace
+            if word[0] == "'" and word[-1] == "'": # character
                 if verbose:
                     print(f"Appending PUSH with {ord(word[1])}")
                 operations.append(Operation(PUSH,ord(word[1])))
@@ -172,7 +171,7 @@ def parse(data):
         return []
 
 # preprocessor
-def crossreference_blocks(program):
+def referenceBlocks(program):
     stack = []
     errors = 0
     for ip in range(len(program)):
@@ -216,7 +215,7 @@ def processIncludes(data):
     for file in toinclude:
         data = (data.replace(f"%include '{file[0]}'", " ", len(file[0])))
         try:
-            data = open(toinclude[0][0],"r").read() + data
+            data = open(file[0],"r").read() + data
         except:
             Error("IncludeError",f"'{file[0]}' not found!")
             errors += 1
@@ -248,8 +247,8 @@ def processComments(data):
     commentMatches = findallMatches(r'(?s)#(.*?)#',data)
 
     # replace comments
-    for m in commentMatches:
-        data = data.replace(m[0],"").replace("#","")
+    for comment in commentMatches:
+        data = data.replace(comment[0],"").replace("#","")
 
     return data
 
@@ -274,7 +273,7 @@ def generate(prg):
             if prg[i].type == DISPLAI:
                 displaisUsed = 1
         if displaisUsed:
-            asm.write("display:\n")
+            asm.write("displai:\n")
             asm.write("    mov     r9, 0xCCCCCCCCCCCCCCCD\n")
             asm.write("    sub     rsp, 40\n")
             asm.write("    mov     BYTE [rsp+31], 10\n")
@@ -331,7 +330,7 @@ def generate(prg):
             elif op.type == DISPLAI:
                 asm.write(f"    ; -- displai --\n")
                 asm.write(f"    pop rdi\n")
-                asm.write(f"    call display\n") # display
+                asm.write(f"    call displai\n") # displai
             elif op.type == EQUAL:
                 asm.write(f"    ; -- EQUAL --\n")
                 asm.write(f"    mov r10, 0\n")
@@ -339,7 +338,7 @@ def generate(prg):
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    cmp rax, rbx\n")
-                asm.write(f"    cmove r10, r11\n")
+                asm.write(f"    cmove r10, r11\n") # move on equal flag
                 asm.write(f"    push r10\n")
             elif op.type == GREATER:
                 asm.write(f"    ; -- GREATER --\n")
@@ -348,7 +347,7 @@ def generate(prg):
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    cmp rbx, rax\n")
-                asm.write(f"    cmovg r10, r11\n")
+                asm.write(f"    cmovg r10, r11\n") # move on greater flag
                 asm.write(f"    push r10\n")
             elif op.type == LESS:
                 asm.write(f"    ; -- LESS --\n")
@@ -357,39 +356,39 @@ def generate(prg):
                 asm.write(f"    pop rax\n")
                 asm.write(f"    pop rbx\n")
                 asm.write(f"    cmp rbx, rax\n")
-                asm.write(f"    cmovl r10, r11\n")
+                asm.write(f"    cmovl r10, r11\n") # move on less flag
                 asm.write(f"    push r10\n")
             elif op.type == IF:
                 asm.write(f"    ; -- IF --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    test rax, rax\n")
-                asm.write(f"    jz address_{op.value}\n")
+                asm.write(f"    jz address_{op.value}\n") # jump on zero flag
             elif op.type == ELSE:
                 asm.write(f"    ; -- ELSE --\n")
-                asm.write(f"    jmp address_{op.value}\n")
+                asm.write(f"    jmp address_{op.value}\n") # jump to end
                 asm.write(f"address_{ip+1}:\n")
             elif op.type == END:
                 if ip + 1 != op.value:
-                    asm.write(f"    jmp address_{op.value}\n")
+                    asm.write(f"    jmp address_{op.value}\n") # jump back
             elif op.type == DUPLICATE:
                 asm.write(f"    ; -- DUPLICATE --\n")
-                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rax\n") 
                 asm.write(f"    push rax\n")
-                asm.write(f"    push rax\n")
+                asm.write(f"    push rax\n") # get the value, push it twice 
             elif op.type == DO:
                 asm.write(f"    ; -- WHILE DO --\n")
                 asm.write(f"    pop rax\n")
                 asm.write(f"    test rax, rax\n")
-                asm.write(f"    jz address_{op.value}\n")
+                asm.write(f"    jz address_{op.value}\n") # jump on zero flag
             elif op.type == MEM:
                 asm.write(f"    ; -- MEMORY --\n")
                 asm.write(f"    mov rax, mem\n")
-                asm.write(f"    add rax, r15\n")
+                asm.write(f"    add rax, r15\n") # add index
                 asm.write(f"    push rax\n")
             elif op.type == LOAD:
                 asm.write(f"    ; -- LOAD --\n")
                 asm.write(f"    pop rax\n")
-                asm.write(f"    xor rbx,rbx\n")
+                asm.write(f"    mov rbx, 0\n")  
                 asm.write(f"    mov bl, [rax]\n")
                 asm.write(f"    push rbx\n")
             elif op.type == STORE:
@@ -399,10 +398,10 @@ def generate(prg):
                 asm.write(f"    mov [rax], bl\n")
             elif op.type == MEMINC:
                 asm.write(f"   ; -- MEM+ -- \n")
-                asm.write(f"   inc r15\n")
+                asm.write(f"   inc r15\n") # increase index
             elif op.type == MEMDEC:
                 asm.write(f"   ; -- MEM- -- \n")
-                asm.write(f"   dec r15\n")
+                asm.write(f"   dec r15\n") # decrease index
             elif op.type == SYSCALL:
                 asm.write(f"   ; -- SYSCALL -- \n")
                 asm.write(f"   pop rax\n")
@@ -412,7 +411,7 @@ def generate(prg):
                 asm.write(f"   pop r10\n")
                 asm.write(f"   pop r8\n")
                 asm.write(f"   pop r9\n")
-                asm.write(f"   syscall\n")
+                asm.write(f"   syscall\n") 
             elif op.type == SWAP:
                 asm.write(f"   ; -- SWAP -- \n")
                 asm.write(f"   pop rax\n")
@@ -421,15 +420,15 @@ def generate(prg):
                 asm.write(f"   push rbx\n")
             elif op.type == MEMINDEX:
                 asm.write(f"   ; -- MEMINDEX -- \n")
-                asm.write(f"   push r15\n")
+                asm.write(f"   push r15\n") # push index
             elif op.type == MEMSET:
                 asm.write(f"   ; -- MEMSET -- \n")
-                asm.write(f"   pop r15\n")
+                asm.write(f"   pop r15\n") # pop index
 
         asm.write(f"address_{ip+1}:\n")
         if appendExit:
-            asm.write("    mov rax, 60\n")
-            asm.write("    mov rdi, 0\n")
+            asm.write("    mov rax, 60\n") # exit syscall
+            asm.write("    mov rdi, 0\n") # code 0
             asm.write("    syscall\n")
         asm.write("\nsection .bss\n")
         asm.write(f"mem resb 64000")
@@ -505,6 +504,6 @@ try:
 except:
     Error("FileError",f"Source code '{sys.argv[1]}' not found")
 
-program = crossreference_blocks(parse(preprocessor(inputData)))
+program = referenceBlocks(parse(preprocessor(inputData)))
 
 generate(program)
