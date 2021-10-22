@@ -5,7 +5,7 @@ import re
 
 #utils
 def Error(name,details):
-    print(name + ": " + details)
+    print(f"{name}: {details}")
 
 def findallMatches(expression,data):
     ret = []
@@ -18,9 +18,10 @@ def findallMatches(expression,data):
 
 # options
 enableLinking = True
+appendExit = True
+shouldCallNASM = True
 verbose = False
 autoRun = False
-appendExit = True
 outputName = "program"
 entryName = "_start"
 
@@ -71,7 +72,7 @@ def parse(data):
                 continue
             if word[0] == "'" and word[-1] == "'":
                 if verbose:
-                    print("Appending PUSH with " + str(ord(word[1])))
+                    print(f"Appending PUSH with {ord(word[1])}")
                 operations.append(Operation(PUSH,ord(word[1])))
                 continue
             if word == "+":
@@ -160,13 +161,13 @@ def parse(data):
                 operations.append(Operation(SYSCALL))
             else:
                 if verbose:
-                    print("Appending PUSH with " + word)
+                    print(f"Appending PUSH with {word}")
                 operations.append(Operation(PUSH,int(word)))
         except:
             Error("ParsingError",f"Unknown operation '{word}'")
             errors += 1
     if verbose:
-        print("Done, with " + str(errors) + " errors")
+        print(f"Done, with {errors} errors")
     if errors == 0:
         return operations
     else:
@@ -215,7 +216,7 @@ def processIncludes(data):
 
     errors = 0
     for file in toinclude:
-        data = (data.replace("%include '"+file[0]+"'", " ", len(file[0])))
+        data = (data.replace(f"%include '{file[0]}'", " ", len(file[0])))
         try:
             data = open(toinclude[0][0],"r").read() + data
         except:
@@ -263,7 +264,7 @@ def preprocessor(data):
 #generator
 def generate(prg):
     if prg == []:
-        print("Generator: Nothing to generate!")
+        print("Nothing to generate!")
         exit(0)
     if verbose:
         print("Generating: " + str(prg))
@@ -438,14 +439,15 @@ def generate(prg):
     if verbose:
         print("Done")
 
-    subprocess.call(["nasm", "-felf64", outputName + ".asm"])
-    if enableLinking:
-        subprocess.call(["ld", "-o", "program" , outputName + ".o"])
+    if shouldCallNASM:
+        subprocess.call(["nasm", "-felf64", f"{outputName}.asm"])
 
-    if autoRun and enableLinking:
-        if verbose:
-            print("Running " + sys.path[0] + "/" + outputName)
-        subprocess.call([sys.path[0] + "/" + outputName])
+        if enableLinking:
+            subprocess.call(["ld", "-o", "program" , f"{outputName}.o"])
+            if autoRun:
+                if verbose:
+                    print(f"Running: {sys.path[0]}/{outputName}")
+                subprocess.call([f"{sys.path[0]}/{outputName}"])
 
 # program
 
@@ -457,6 +459,7 @@ def usage():
     print("-v -> verbose")
     print("-l -> disable automatic linking")
     print("-es -> disable the exit syscall on the end")
+    print("-n -> disable calling nasm")
     print("-e [entry name] -> change entry point name from _start to [entry name]")
     print("-o [output name] -> output name")
 
@@ -467,6 +470,7 @@ def parseArguments(args,argslen):
     global appendExit
     global outputName
     global entryName
+    global shouldCallNASM
     # parse arguments
     if argslen < 2:
         print("Not enough arguments!")
@@ -489,12 +493,20 @@ def parseArguments(args,argslen):
             elif args[idx] == "-o":
                 if idx < argslen:
                     outputName = args[idx+1]
+            elif args[idx] == "-n":
+                shouldCallNASM = False
 
 arguments = sys.argv
 argumentsLen = len(sys.argv)
 
 parseArguments(arguments, argumentsLen)
 
-program = crossreference_blocks(parse(preprocessor(open(sys.argv[1], "r").read())))
+inputData = ""
+try:
+    inputData = open(sys.argv[1], "r").read()
+except:
+    Error("FileError",f"Source code '{sys.argv[1]}' not found")
+
+program = crossreference_blocks(parse(preprocessor(inputData)))
 
 generate(program)
