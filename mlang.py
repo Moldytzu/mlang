@@ -8,13 +8,11 @@ def Error(name,details):
     print(f"{name}: {details}")
 
 def findallMatches(expression,data):
-    ret = []
-    c = re.compile(expression)
-    for m in c.finditer(data):
-        groups = (len(m.groups()[0].split("%")))
-        for idx in range(groups):
-            ret.append((m.groups()[idx],m.span(idx)))
-    return ret
+    matches = []
+    c = re.compile(expression) # compile the expression
+    for m in c.finditer(data): # iterate thru the findings
+        matches.append((m.groups()[0],m.span(0))) # get the content and the range
+    return matches
 
 # options
 enableLinking = True
