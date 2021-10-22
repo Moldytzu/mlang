@@ -1,6 +1,6 @@
 %include 'stdlib/standard.mlsrc'
 
-%macro constantValue 'A' %macro
+%macro constantValue 'A' %macro # declare a constant value as a macro #
 
-constantValue pushMemory display
+constantValue pushMemory display # push it into the memory and then display it #
 newLine pushMemory display

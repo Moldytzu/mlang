@@ -4,7 +4,7 @@ import sys
 import re
 
 #utils
-def Error(name,details):
+def error(name,details):
     print(f"{name}: {details}")
 
 def findallMatches(expression,data):
@@ -13,6 +13,11 @@ def findallMatches(expression,data):
     for m in c.finditer(data): # iterate thru the findings
         matches.append((m.groups()[0],m.span(0))) # get the content and the range
     return matches
+
+def doVerbose(text):
+    global verbose
+    if verbose:
+        print(text)
 
 # options
 enableLinking = True
@@ -62,109 +67,84 @@ def parse(data):
     operations = []
     data = data.split()
     errors = 0
-    if verbose:
-        print("Parsing")
+    doVerbose("Parsing")
     for word in data:
         try:
             if word in ("","\t","\n"): continue # whitespace
-            if word[0] == "'" and word[-1] == "'": # character
-                if verbose:
-                    print(f"Appending PUSH with {ord(word[1])}")
+            if word[0] == "'" and word[-1] == "'" and len(word) == 3: # character
+                doVerbose(f"Appending PUSH with {ord(word[1])}")
                 operations.append(Operation(PUSH,ord(word[1])))
                 continue
             if word == "+":
-                if verbose:
-                    print("Appending PLUS")
+                doVerbose("Appending PLUS")
                 operations.append(Operation(PLUS))
             elif word == "-":
-                if verbose:
-                    print("Appending MINUS")
+                doVerbose("Appending MINUS")
                 operations.append(Operation(MINUS))
             elif word == "=":
-                if verbose:
-                    print("Appending EQUAL")
+                doVerbose("Appending EQUAL")
                 operations.append(Operation(EQUAL))
             elif word == "<":
-                if verbose:
-                    print("Appending LESS")
+                doVerbose("Appending LESS")
                 operations.append(Operation(LESS))
             elif word == ">":
-                if verbose:
-                    print("Appending GREATER")
+                doVerbose("Appending GREATER")
                 operations.append(Operation(GREATER))
             elif word.lower() == "displai" or word.lower() == "dispi":
-                if verbose:
-                    print("Appending DISPLAI")
+                doVerbose("Appending DISPLAI")
                 operations.append(Operation(DISPLAI))
             elif word.lower() == "if":
-                if verbose:
-                    print("Appending IF")
+                doVerbose("Appending IF")
                 operations.append(Operation(IF))
             elif word.lower() == "while":
-                if verbose:
-                    print("Appending WHILE")
+                doVerbose("Appending WHILE")
                 operations.append(Operation(WHILE))
             elif word.lower() == "do":
-                if verbose:
-                    print("Appending DO")
+                doVerbose("Appending DO")
                 operations.append(Operation(DO))
             elif word.lower() == "end":
-                if verbose:
-                    print("Appending END")
+                doVerbose("Appending END")
                 operations.append(Operation(END))
             elif word.lower() == "else":
-                if verbose:
-                    print("Appending ELSE")
+                doVerbose("Appending ELSE")
                 operations.append(Operation(ELSE))
             elif word.lower() == "duplicate" or word.lower() == "dp":
-                if verbose:
-                    print("Appending DUPLICATE")
+                doVerbose("Appending DUPLICATE")
                 operations.append(Operation(DUPLICATE))
             elif word.lower() == "memory" or word.lower() == "mem":
-                if verbose:
-                    print("Appending MEM")
+                doVerbose("Appending MEM")
                 operations.append(Operation(MEM))
             elif word.lower() == "store" or word.lower() == "ste":
-                if verbose:
-                    print("Appending STORE")
+                doVerbose("Appending STORE")
                 operations.append(Operation(STORE))   
             elif word.lower() == "load" or word.lower() == "lod":
-                if verbose:
-                    print("Appending LOAD")
+                doVerbose("Appending LOAD")
                 operations.append(Operation(LOAD)) 
             elif word.lower() == "swap" or word.lower() == "swp":
-                if verbose:
-                    print("Appending SWAP")
+                doVerbose("Appending SWAP")
                 operations.append(Operation(SWAP)) 
             elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
-                if verbose:
-                    print("Appending MEMINC")
+                doVerbose("Appending MEMINC")
                 operations.append(Operation(MEMINC)) 
             elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
-                if verbose:
-                    print("Appending MEMDEC")
+                doVerbose("Appending MEMDEC")
                 operations.append(Operation(MEMDEC))
             elif word.lower() == "memoryindex" or word.lower() == "memidx" or word.lower() == "mi":
-                if verbose:
-                    print("Appending MEMINDEX")
+                doVerbose("Appending MEMINDEX")
                 operations.append(Operation(MEMINDEX))
             elif word.lower() == "memoryset" or word.lower() == "memset" or word.lower() == "ms":
-                if verbose:
-                    print("Appending MEMSET")
+                doVerbose("Appending MEMSET")
                 operations.append(Operation(MEMSET))
             elif word.lower() == "syscall" or word.lower() == "sys" or word.lower() == "kcall":
-                if verbose:
-                    print("Appending SYSCALL")
+                doVerbose("Appending SYSCALL")
                 operations.append(Operation(SYSCALL))
             else:
-                if verbose:
-                    print(f"Appending PUSH with {word}")
+                doVerbose(f"Appending PUSH with {word}")
                 operations.append(Operation(PUSH,int(word)))
         except:
-            Error("ParsingError",f"Unknown operation '{word}'")
+            error("ParsingError",f"Unknown operation '{word}'")
             errors += 1
-    if verbose:
-        print(f"Done, with {errors} errors")
+    doVerbose(f"Done, with {errors} errors")
     if errors == 0:
         return operations
     else:
@@ -181,7 +161,7 @@ def referenceBlocks(program):
         elif op.type == ELSE:
             if_ip = stack.pop()
             if program[if_ip].type != IF:
-                Error("SyntaxError", "Else should be used only in if blocks")
+                error("SyntaxError", "Else should be used only in if blocks")
                 errors += 1
             program[if_ip].value = ip + 1
             stack.append(ip)
@@ -194,7 +174,7 @@ def referenceBlocks(program):
                 program[ip].value = program[block_ip].value
                 program[block_ip].value = ip + 1
             else:
-                Error("SyntaxError", "End should be used only to close if and while blocks")
+                error("SyntaxError", "End should be used only to close if and while blocks")
                 errors += 1
                 exit(1)
         elif op.type == WHILE:
@@ -217,7 +197,7 @@ def processIncludes(data):
         try:
             data = open(file[0],"r").read() + data
         except:
-            Error("IncludeError",f"'{file[0]}' not found!")
+            error("IncludeError",f"'{file[0]}' not found!")
             errors += 1
 
     if errors == 0:
@@ -263,8 +243,7 @@ def generate(prg):
     if prg == []:
         print("Nothing to generate!")
         exit(0)
-    if verbose:
-        print("Generating: " + str(prg))
+    doVerbose("Generating: " + str(prg))
     with open(outputName + ".asm", "w") as asm:
         asm.write("section .text\n")
         # optimization: include display only if it's used
@@ -433,8 +412,7 @@ def generate(prg):
         asm.write("\nsection .bss\n")
         asm.write(f"mem resb 64000")
     
-    if verbose:
-        print("Done")
+    doVerbose("Done")
 
     if shouldCallNASM:
         subprocess.call(["nasm", "-felf64", f"{outputName}.asm"])
@@ -442,8 +420,7 @@ def generate(prg):
         if enableLinking:
             subprocess.call(["ld", "-o", "program" , f"{outputName}.o"])
             if autoRun:
-                if verbose:
-                    print(f"Running: {sys.path[0]}/{outputName}")
+                doVerbose(f"Running: {sys.path[0]}/{outputName}")
                 subprocess.call([f"{sys.path[0]}/{outputName}"])
 
 # program
@@ -502,7 +479,7 @@ inputData = ""
 try:
     inputData = open(sys.argv[1], "r").read()
 except:
-    Error("FileError",f"Source code '{sys.argv[1]}' not found")
+    error("FileError",f"Source code '{sys.argv[1]}' not found")
 
 program = referenceBlocks(parse(preprocessor(inputData)))
 

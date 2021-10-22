@@ -1,14 +1,19 @@
 %macro display
-    0 0 1 memory 1 1 syscall
+    0 0 # unused #
+    1 # count #
+    memory # buffer #
+    1 # fd #
+    1 # write #
+    syscall
 %macro
 
 %macro pushMemory
-    memory swap store
+    memory swap store # swap values and then store #
 %macro
 
 %macro popMemory
-    memory load
+    memory load # load from memory #
 %macro
 
-%macro newLine 10 %macro
-%macro space 32 %macro
+%macro newLine 10 %macro # new line is 0xA or 10 #
+%macro space 32 %macro # space is 0x20 or 32 #
