@@ -14,10 +14,10 @@ def findallMatches(expression,data):
         matches.append((m.groups()[0],m.span(0))) # get the content and the range
     return matches
 
-def doVerbose(text):
+def doVerbose(section,text):
     global verbose
     if verbose:
-        print(text)
+        print(f"{section}: {text}")
 
 # options
 enableLinking = True
@@ -68,94 +68,94 @@ def parse(data):
     operations = []
     data = data.split()
     errors = 0
-    doVerbose("Parsing")
+    doVerbose("Parser","Parsing")
     for word in data:
         try:
             if word in ("","\t","\n"): continue # whitespace
             if word[0] == "'" and word[-1] == "'" and len(word) == 3: # character
-                doVerbose(f"Appending PUSH with {ord(word[1])}")
+                doVerbose("Parser",f"Appending PUSH with {ord(word[1])}")
                 operations.append(Operation(PUSH,ord(word[1])))
                 continue
             if word.startswith("0x") and len(word) > 2: # hexdecimal
-                doVerbose(f"Appending PUSH with {int(word,base=16)}")
+                doVerbose("Parser",f"Appending PUSH with {int(word,base=16)}")
                 operations.append(Operation(PUSH,int(word,base=16)))
                 continue
             if word == "+":
-                doVerbose("Appending PLUS")
+                doVerbose("Parser","Appending PLUS")
                 operations.append(Operation(PLUS))
             elif word == "-":
-                doVerbose("Appending MINUS")
+                doVerbose("Parser","Appending MINUS")
                 operations.append(Operation(MINUS))
             elif word == "*":
-                doVerbose("Appending MULTIPLY")
+                doVerbose("Parser","Appending MULTIPLY")
                 operations.append(Operation(MULTIPLY))
             elif word == "/":
-                doVerbose("Appending DIVIDE")
+                doVerbose("Parser","Appending DIVIDE")
                 operations.append(Operation(DIVIDE))
             elif word == "=":
-                doVerbose("Appending EQUAL")
+                doVerbose("Parser","Appending EQUAL")
                 operations.append(Operation(EQUAL))
             elif word == "<":
-                doVerbose("Appending LESS")
+                doVerbose("Parser","Appending LESS")
                 operations.append(Operation(LESS))
             elif word == ">":
-                doVerbose("Appending GREATER")
+                doVerbose("Parser","Appending GREATER")
                 operations.append(Operation(GREATER))
             elif word.lower() == "displai" or word.lower() == "dispi":
-                doVerbose("Appending DISPLAI")
+                doVerbose("Parser","Appending DISPLAI")
                 operations.append(Operation(DISPLAI))
             elif word.lower() == "if":
-                doVerbose("Appending IF")
+                doVerbose("Parser","Appending IF")
                 operations.append(Operation(IF))
             elif word.lower() == "while":
-                doVerbose("Appending WHILE")
+                doVerbose("Parser","Appending WHILE")
                 operations.append(Operation(WHILE))
             elif word.lower() == "do":
-                doVerbose("Appending DO")
+                doVerbose("Parser","Appending DO")
                 operations.append(Operation(DO))
             elif word.lower() == "end":
-                doVerbose("Appending END")
+                doVerbose("Parser","Appending END")
                 operations.append(Operation(END))
             elif word.lower() == "else":
-                doVerbose("Appending ELSE")
+                doVerbose("Parser","Appending ELSE")
                 operations.append(Operation(ELSE))
             elif word.lower() == "duplicate" or word.lower() == "dp":
-                doVerbose("Appending DUPLICATE")
+                doVerbose("Parser","Appending DUPLICATE")
                 operations.append(Operation(DUPLICATE))
             elif word.lower() == "memory" or word.lower() == "mem":
-                doVerbose("Appending MEM")
+                doVerbose("Parser","Appending MEM")
                 operations.append(Operation(MEM))
             elif word.lower() == "store" or word.lower() == "ste":
-                doVerbose("Appending STORE")
+                doVerbose("Parser","Appending STORE")
                 operations.append(Operation(STORE))   
             elif word.lower() == "load" or word.lower() == "lod":
-                doVerbose("Appending LOAD")
+                doVerbose("Parser","Appending LOAD")
                 operations.append(Operation(LOAD)) 
             elif word.lower() == "swap" or word.lower() == "swp":
-                doVerbose("Appending SWAP")
+                doVerbose("Parser","Appending SWAP")
                 operations.append(Operation(SWAP)) 
             elif word.lower() == "memory+" or word.lower() == "mem+" or word.lower() == "m+":
-                doVerbose("Appending MEMINC")
+                doVerbose("Parser","Appending MEMINC")
                 operations.append(Operation(MEMINC)) 
             elif word.lower() == "memory-" or word.lower() == "mem-" or word.lower() == "m-":
-                doVerbose("Appending MEMDEC")
+                doVerbose("Parser","Appending MEMDEC")
                 operations.append(Operation(MEMDEC))
             elif word.lower() == "memoryindex" or word.lower() == "memidx" or word.lower() == "mi":
-                doVerbose("Appending MEMINDEX")
+                doVerbose("Parser","Appending MEMINDEX")
                 operations.append(Operation(MEMINDEX))
             elif word.lower() == "memoryset" or word.lower() == "memset" or word.lower() == "ms":
-                doVerbose("Appending MEMSET")
+                doVerbose("Parser","Appending MEMSET")
                 operations.append(Operation(MEMSET))
             elif word.lower() == "syscall" or word.lower() == "sys" or word.lower() == "kcall":
-                doVerbose("Appending SYSCALL")
+                doVerbose("Parser","Appending SYSCALL")
                 operations.append(Operation(SYSCALL))
             else:
-                doVerbose(f"Appending PUSH with {word}")
+                doVerbose("Parser",f"Appending PUSH with {word}")
                 operations.append(Operation(PUSH,int(word)))
         except:
             error("ParsingError",f"Unknown operation '{word}'")
             errors += 1
-    doVerbose(f"Done, with {errors} errors")
+    doVerbose("Parser",f"Done, with {errors} errors")
     if errors == 0:
         return operations
     else:
@@ -229,7 +229,7 @@ def processMacros(data):
         data = data.replace(m[0],"").replace("%macro","")
     # replace macros
     for passNo in range(0,16):
-        doVerbose(f"Replacing macros: pass {passNo}")
+        doVerbose("Preprocessor",f"Replacing macros: pass {passNo}")
         for m in macros:
             data = data.replace(f"{m[0]} ",f"{m[1]} ") # replace only full words
             data = data.replace(f"{m[0]}\n",f"{m[1]}\n")
@@ -259,7 +259,7 @@ def generate(prg):
     if prg == []:
         print("Nothing to generate!")
         exit(0)
-    doVerbose("Generating: " + str(prg))
+    doVerbose("Generator","Generating: " + str(prg))
     with open(outputName + ".asm", "w") as asm:
         asm.write("section .text\n")
         # optimization: include display only if it's used
@@ -441,7 +441,7 @@ def generate(prg):
         asm.write("\nsection .bss\n")
         asm.write(f"mem resb 64000")
     
-    doVerbose("Done")
+    doVerbose("Generator","Done")
 
     if shouldCallNASM:
         subprocess.call(["nasm", "-felf64", f"{outputName}.asm"])
@@ -449,7 +449,7 @@ def generate(prg):
         if enableLinking:
             subprocess.call(["ld", "-o", "program" , f"{outputName}.o"])
             if autoRun:
-                doVerbose(f"Running: {sys.path[0]}/{outputName}")
+                doVerbose("Generator",f"Running: {sys.path[0]}/{outputName}")
                 subprocess.call([f"{sys.path[0]}/{outputName}"])
 
 # program
