@@ -54,6 +54,8 @@ MEMSET = 21
 MULTIPLY = 22
 DIVIDE = 23
 
+operationIdentifiers = ["PUSH","PLUS","MINUS","DISPLAI","EQUAL","IF","END","ELSE","DUPLICATE","GREATER","LESS","WHILE","DO","MEM","STORE","LOAD","MEMINC","MEMDEC","SYSCALL","SWAP","MEMINDEX","MEMSET","MULTIPLY","DIVIDE"]
+
 class Operation():
     type = None
     value = None
@@ -61,7 +63,10 @@ class Operation():
         self.type = type
         self.value = value
     def __repr__(self):
-        return f"{self.type}:{self.value}"
+        if self.value:
+            return f"{operationIdentifiers[self.type]} -> {self.value}"
+        else:
+            return f"{operationIdentifiers[self.type]}"
 
 # parser
 def parse(data):
