@@ -76,6 +76,10 @@ def parse(data):
                 doVerbose(f"Appending PUSH with {ord(word[1])}")
                 operations.append(Operation(PUSH,ord(word[1])))
                 continue
+            if word.startswith("0x") and len(word) > 2: # hexdecimal
+                doVerbose(f"Appending PUSH with {int(word,base=16)}")
+                operations.append(Operation(PUSH,int(word,base=16)))
+                continue
             if word == "+":
                 doVerbose("Appending PLUS")
                 operations.append(Operation(PLUS))

@@ -26,5 +26,5 @@
     memory load # load from memory #
 %macro
 
-%macro newLine 10 %macro # new line is 0xA or 10 #
-%macro space 32 %macro # space is 0x20 or 32 #
+%macro newLine 0xA %macro # new line is 0xA or 10 #
+%macro space 0x20 %macro # space is 0x20 or 32 #
