@@ -220,13 +220,15 @@ def processMacros(data):
     for m in macrosMatches:
         name = m[0].split()[0]
         content = m[0][len(name)+1:].strip()
-        range = m[1]
-        macros.append((name,content,range))
+        span = m[1]
+        macros.append((name,content,span))
         data = data.replace(m[0],"").replace("%macro","")
 
     # replace macros
-    for m in macros:
-        data = data.replace(m[0],m[1])
+    for passNo in range(0,16):
+        doVerbose(f"Replacing macros: pass {passNo}")
+        for m in macros:
+            data = data.replace(m[0],m[1])
 
     return data
 
