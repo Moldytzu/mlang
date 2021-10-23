@@ -1,9 +1,20 @@
+# constants #
+# file descriptors #
+%macro stdin  0 %macro
+%macro stdout 1 %macro
+%macro sterr  2 %macro
+# system calls #
+%macro sys_read  0 %macro
+%macro sys_write 1 %macro
+%macro sys_exit 60 %macro
+
+# macros
 %macro display
     0 0 # unused #
     1 # count #
     memory # buffer #
-    1 # fd #
-    1 # write #
+    stdout # file descriptor #
+    sys_write
     syscall
 %macro
 
