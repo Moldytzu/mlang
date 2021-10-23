@@ -29,6 +29,6 @@
     memory load # load from memory #
 %macro
 
-%macro getMemoryFrom
+%macro popMemoryFrom
     memorySet memory load # set index then load #
 %macro

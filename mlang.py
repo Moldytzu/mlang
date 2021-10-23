@@ -204,7 +204,7 @@ def processIncludes(data):
 
     errors = 0
     for file in toinclude:
-        data = (data.replace(f"%include '{file[0]}'", " ", len(file[0])))
+        data = data.replace(f"%include '{file[0]}'", "")
         try:
             data = open(file[0],"r").read() + data
         except:
@@ -227,12 +227,12 @@ def processMacros(data):
         span = m[1]
         macros.append((name,content,span))
         data = data.replace(m[0],"").replace("%macro","")
-
     # replace macros
     for passNo in range(0,16):
         doVerbose(f"Replacing macros: pass {passNo}")
         for m in macros:
-            data = data.replace(m[0],m[1])
+            data = data.replace(f"{m[0]} ",f"{m[1]} ") # replace only full words
+            data = data.replace(f"{m[0]}\n",f"{m[1]}\n")
 
     return data
 
@@ -246,6 +246,8 @@ def processComments(data):
     return data
 
 def preprocessor(data):
+    if(data[-1] != "\n"):
+        data += "\n"
     while data.__contains__("%include"): # check all includes
         data = processIncludes(data)
     data = processComments(data)

@@ -2,4 +2,4 @@
 
 10 memorySet 'B' pushMemory
 0 memorySet
-10 getMemoryFrom display
+10 popMemoryFrom display
