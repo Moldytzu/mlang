@@ -7,6 +7,9 @@
 %macro sys_read  0 %macro
 %macro sys_write 1 %macro
 %macro sys_exit 60 %macro
+# characters #
+%macro newLine 0xA %macro # new line is 0xA or 10 #
+%macro space 0x20 %macro # space is 0x20 or 32 #
 
 # macros #
 %macro display
@@ -26,5 +29,6 @@
     memory load # load from memory #
 %macro
 
-%macro newLine 0xA %macro # new line is 0xA or 10 #
-%macro space 0x20 %macro # space is 0x20 or 32 #
+%macro getMemoryFrom
+    memorySet memory load # set index then load #
+%macro
