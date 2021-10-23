@@ -8,7 +8,7 @@
 %macro sys_write 1 %macro
 %macro sys_exit 60 %macro
 
-# macros
+# macros #
 %macro display
     0 0 # unused #
     1 # count #
