@@ -511,15 +511,29 @@ def generateOptimized(prg):
         while ip < len(program):
             op = program[ip]
             nextOP = program[ip]
+            thirdOP = program[ip]
             try:
                 nextOP = program[ip+1]
-            except:
-                nextOP = program[ip]
+            except: pass
+            try:
+                thirdOP = program[ip+2]
+            except: pass
             asm.write(f"address_{ip}:\n")
             if op.type == PUSH and nextOP.type == MEMSET:
                 asm.write(f"    ; -- MEMSET {str(op.value)} --\n")
                 asm.write(f"    mov r15, {str(op.value)}\n")
                 ip+=2
+            elif op.type == PUSH and nextOP.type == PUSH and thirdOP.type == SYSCALL:
+                asm.write(f"   ; -- SYSCALL {op.value} {nextOP.value} -- \n")
+                asm.write(f"   mov rax, {nextOP.value}\n")
+                asm.write(f"   mov rdi, {op.value}\n")
+                asm.write(f"   pop rsi\n")
+                asm.write(f"   pop rdx\n")
+                asm.write(f"   pop r10\n")
+                asm.write(f"   pop r8\n")
+                asm.write(f"   pop r9\n")
+                asm.write(f"   syscall\n") 
+                ip+=3
             elif op.type == PUSH:
                 asm.write(f"    ; -- PUSH {str(op.value)} --\n")
                 asm.write(f"    push {str(op.value)}\n")
