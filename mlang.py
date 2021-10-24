@@ -509,77 +509,6 @@ def generateOptimized(prg):
       asm.write(entryName + ":\n")
 
       ip = 0
-      skiped = 0
-      plen = len(program)-1
-      while ip < len(program):
-         op = secondOP = thirdOP = fourthOP = fivthOP = sixthOP = seventhOP = eighthOP = program[ip] # I should clean this
-         if not ip+1 > plen: secondOP = program[ip+1]
-         if not ip+2 > plen: thirdOP = program[ip+2]
-         if not ip+3 > plen: fourthOP = program[ip+3]
-         if not ip+4 > plen: fivthOP = program[ip+4]
-         if not ip+5 > plen: sixthOP = program[ip+5]
-         if not ip+6 > plen: seventhOP = program[ip+6]
-         if not ip+7 > plen: eighthOP = program[ip+7]
-         if op.type == PUSH and secondOP.type == MEMSET:
-            skiped += 1
-            ip+=2
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == PUSH and fourthOP.type == PUSH and fivthOP.type == MEM and sixthOP.type == PUSH and seventhOP.type == PUSH and eighthOP.type == SYSCALL:
-            skiped += 7
-            ip+=8
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == SYSCALL:
-            skiped += 2
-            ip+=3
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == PLUS:
-            skiped += 2
-            ip+=3
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == MINUS:
-            skiped += 2
-            ip+=3
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == DIVIDE:
-            skiped += 2
-            ip+=3
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == MULTIPLY:
-            skiped += 2
-            ip+=3
-         elif op.type == MEMINDEX and secondOP.type == DISPLAI:
-            skiped += 1
-            ip+=2
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == LESS:
-            skiped += 2
-            ip += 3
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == GREATER:
-            skiped += 2
-            ip += 3
-         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == EQUAL:
-            skiped += 2
-            ip += 3
-         elif op.type == PUSH: ip+=1
-         elif op.type == PLUS: ip+=1
-         elif op.type == MINUS: ip+=1
-         elif op.type == DISPLAI: ip+=1
-         elif op.type == EQUAL:ip+=1
-         elif op.type == GREATER:ip+=1
-         elif op.type == LESS:ip+=1
-         elif op.type == IF:ip+=1
-         elif op.type == ELSE:ip+=1
-         elif op.type == END:ip+=1
-         elif op.type == DUPLICATE:ip+=1
-         elif op.type == DO:ip+=1
-         elif op.type == MEM:ip+=1
-         elif op.type == LOAD:ip+=1
-         elif op.type == STORE:ip+=1
-         elif op.type == MEMINC:ip+=1
-         elif op.type == MEMDEC:ip+=1
-         elif op.type == SYSCALL:ip+=1
-         elif op.type == SWAP:ip+=1
-         elif op.type == MEMINDEX:ip+=1
-         elif op.type == MEMSET:ip+=1
-         elif op.type == MULTIPLY:ip+=1
-         elif op.type == DIVIDE:ip+=1
-         elif op.type == WHILE:ip+=1
-
-      ip = 0
-      skiped = 0
       plen = len(program)-1
       while ip < len(program):
          op = secondOP = thirdOP = fourthOP = fivthOP = sixthOP = seventhOP = eighthOP = program[ip] # I should clean this
@@ -739,16 +668,16 @@ def generateOptimized(prg):
             asm.write(f"   ; -- IF --\n")
             asm.write(f"   pop rax\n")
             asm.write(f"   test rax, rax\n")
-            asm.write(f"   jz address_{op.value - skiped}\n") # jump on zero flag
+            asm.write(f"   jz address_{op.value }\n") # jump on zero flag
             ip+=1
          elif op.type == ELSE:
             asm.write(f"   ; -- ELSE --\n")
-            asm.write(f"   jmp address_{op.value - skiped}\n") # jump to end
-            asm.write(f"address_{ip+1 - skiped}:\n")
+            asm.write(f"   jmp address_{op.value }\n") # jump to end
+            asm.write(f"address_{ip+1 }:\n")
             ip+=1
          elif op.type == END:
             if ip + 1 != op.value:
-               asm.write(f"   jmp address_{op.value - skiped}\n") # jump back
+               asm.write(f"   jmp address_{op.value }\n") # jump back
             ip+=1
          elif op.type == DUPLICATE:
             asm.write(f"   ; -- DUPLICATE --\n")
@@ -760,7 +689,7 @@ def generateOptimized(prg):
             asm.write(f"   ; -- WHILE DO --\n")
             asm.write(f"   pop rax\n")
             asm.write(f"   test rax, rax\n")
-            asm.write(f"   jz address_{op.value - skiped}\n") # jump on zero flag
+            asm.write(f"   jz address_{op.value }\n") # jump on zero flag
             ip+=1
          elif op.type == MEM:
             asm.write(f"   ; -- MEMORY --\n")
@@ -837,14 +766,14 @@ def generateOptimized(prg):
             error("GenerateError",f"{operationIdentifiers[op.type]}")
             exit()
 
-      asm.write(f"address_{ip - skiped}:\n")
+      asm.write(f"address_{ip}:\n")
       if appendExit:
          asm.write("   mov rax, 60\n") # exit syscall
          asm.write("   mov rdi, 0\n") # code 0
          asm.write("   syscall\n")
       asm.write("\nsection .bss\n")
       asm.write(f"mem resb 64000")
-   
+
    doVerbose("Generator","Done")
 
    if shouldCallNASM:
