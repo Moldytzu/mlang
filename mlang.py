@@ -879,6 +879,7 @@ try:
    inputData = open(sys.argv[1], "r").read()
 except:
    error("FileError",f"Source code '{sys.argv[1]}' not found")
+   exit(-1)
 
 program = linkBlocks(parse(preprocessor(inputData)))
 
