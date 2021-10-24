@@ -509,23 +509,52 @@ def generateOptimized(prg):
         asm.write(entryName + ":\n")
         ip = 0
         while ip < len(program):
-            op = program[ip]
-            nextOP = program[ip]
+            op = program[ip] # I should clean this
+            secondOP = program[ip]
             thirdOP = program[ip]
-            try:
-                nextOP = program[ip+1]
-            except: pass
-            try:
-                thirdOP = program[ip+2]
-            except: pass
+            fourthOP = program[ip]
+            fivthOP = program[ip]
+            sixthOP = program[ip]
+            seventhOP = program[ip]
+            eighthOP = program[ip]
+            if not ip+1 > len(program)-1: secondOP = program[ip+1]
+            if not ip+2 > len(program)-1: thirdOP = program[ip+2]
+            if not ip+3 > len(program)-1: fourthOP = program[ip+3]
+            if not ip+4 > len(program)-1: fivthOP = program[ip+4]
+            if not ip+5 > len(program)-1: sixthOP = program[ip+5]
+            if not ip+6 > len(program)-1: seventhOP = program[ip+6]
+            if not ip+7 > len(program)-1: eighthOP = program[ip+7]
             asm.write(f"address_{ip}:\n")
-            if op.type == PUSH and nextOP.type == MEMSET:
+            if op.type == PUSH and secondOP.type == MEMSET:
                 asm.write(f"    ; -- MEMSET {str(op.value)} --\n")
                 asm.write(f"    mov r15, {str(op.value)}\n")
                 ip+=2
-            elif op.type == PUSH and nextOP.type == PUSH and thirdOP.type == SYSCALL:
-                asm.write(f"   ; -- SYSCALL {op.value} {nextOP.value} -- \n")
-                asm.write(f"   mov rax, {nextOP.value}\n")
+            elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == PUSH and fourthOP.type == PUSH and fivthOP.type == MEM and sixthOP.type == PUSH and seventhOP.type == PUSH and eighthOP.type == SYSCALL:
+                asm.write(f"   ; -- SYSCALL -- \n")
+                asm.write(f"   mov rax, {seventhOP.value}\n")
+                asm.write(f"   mov rdi, {sixthOP.value}\n")
+                asm.write(f"   mov rsi, mem\n")
+                asm.write(f"   add rsi, r15\n") # add index
+                asm.write(f"   mov rdx, {fourthOP.value} \n")
+                asm.write(f"   mov r10, {thirdOP.value} \n")
+                asm.write(f"   mov r8, {secondOP.value} \n")
+                asm.write(f"   mov r9, {op.value}\n")
+                asm.write(f"   syscall\n") 
+                ip+=8
+            elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == SYSCALL:
+                asm.write(f"   ; -- SYSCALL {op.value} {secondOP.value} -- \n")
+                asm.write(f"   mov rax, {secondOP.value}\n")
+                asm.write(f"   mov rdi, {op.value}\n")
+                asm.write(f"   pop rsi\n")
+                asm.write(f"   pop rdx\n")
+                asm.write(f"   pop r10\n")
+                asm.write(f"   pop r8\n")
+                asm.write(f"   pop r9\n")
+                asm.write(f"   syscall\n") 
+                ip+=3
+            elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == SYSCALL:
+                asm.write(f"   ; -- SYSCALL {op.value} {secondOP.value} -- \n")
+                asm.write(f"   mov rax, {secondOP.value}\n")
                 asm.write(f"   mov rdi, {op.value}\n")
                 asm.write(f"   pop rsi\n")
                 asm.write(f"   pop rdx\n")
