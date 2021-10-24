@@ -7,3 +7,19 @@ else
 end
 
 newLine pushMemory display
+
+2 1 > if
+    'Y' pushMemory display
+else
+    'N' pushMemory display
+end
+
+newLine pushMemory display
+
+2 1 < if
+    'Y' pushMemory display
+else
+    'N' pushMemory display
+end
+
+newLine pushMemory display

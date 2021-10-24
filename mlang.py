@@ -544,6 +544,15 @@ def generateOptimized(prg):
          elif op.type == MEMINDEX and secondOP.type == DISPLAI:
             skiped += 1
             ip+=2
+         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == LESS:
+            skiped += 2
+            ip += 3
+         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == GREATER:
+            skiped += 2
+            ip += 3
+         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == EQUAL:
+            skiped += 2
+            ip += 3
          elif op.type == PUSH: ip+=1
          elif op.type == PLUS: ip+=1
          elif op.type == MINUS: ip+=1
@@ -643,6 +652,36 @@ def generateOptimized(prg):
             asm.write(f"   mov rdi, r15\n")
             asm.write(f"   call displai\n") # displai
             ip+=2
+         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == LESS:
+            asm.write(f"   ; -- LESS --\n")
+            asm.write(f"   mov r10, 0\n")
+            asm.write(f"   mov r11, 1\n")
+            asm.write(f"   mov rax, {secondOP.value}\n")
+            asm.write(f"   mov rbx, {op.value}\n")
+            asm.write(f"   cmp rbx, rax\n")
+            asm.write(f"   cmovl r10, r11\n") # move on less flag
+            asm.write(f"   push r10\n")
+            ip+=3
+         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == GREATER:
+            asm.write(f"   ; -- GREATER --\n")
+            asm.write(f"   mov r10, 0\n")
+            asm.write(f"   mov r11, 1\n")
+            asm.write(f"   mov rax, {secondOP.value}\n")
+            asm.write(f"   mov rbx, {op.value}\n")
+            asm.write(f"   cmp rbx, rax\n")
+            asm.write(f"   cmovg r10, r11\n") # move on less flag
+            asm.write(f"   push r10\n")
+            ip+=3
+         elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == EQUAL:
+            asm.write(f"   ; -- EQUAL --\n")
+            asm.write(f"   mov r10, 0\n")
+            asm.write(f"   mov r11, 1\n")
+            asm.write(f"   mov rax, {secondOP.value}\n")
+            asm.write(f"   mov rbx, {op.value}\n")
+            asm.write(f"   cmp rbx, rax\n")
+            asm.write(f"   cmove r10, r11\n") # move on less flag
+            asm.write(f"   push r10\n")
+            ip+=3
          elif op.type == PUSH:
             asm.write(f"   ; -- PUSH {str(op.value)} --\n")
             asm.write(f"   push {str(op.value)}\n")
