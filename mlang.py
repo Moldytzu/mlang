@@ -27,6 +27,7 @@ verbose = False
 autoRun = False
 outputName = "program"
 entryName = "_start"
+optimizedGenerator = False
 
 # operations
 PUSH = 0
@@ -457,6 +458,238 @@ def generate(prg):
                 doVerbose("Generator",f"Running: {sys.path[0]}/{outputName}")
                 subprocess.call([f"{sys.path[0]}/{outputName}"])
 
+def generateOptimized(prg):
+    if prg == []:
+        print("Nothing to generate!")
+        exit(0)
+    doVerbose("Generator","Generating Optimized: " + str(prg))
+    with open(outputName + ".asm", "w") as asm:
+        asm.write("section .text\n")
+        # optimization: include display only if it's used
+        displaisUsed = 0
+        for i in range(len(prg)):
+            if prg[i].type == DISPLAI:
+                displaisUsed = 1
+        if displaisUsed:
+            asm.write("displai:\n")
+            asm.write("    mov     r9, 0xCCCCCCCCCCCCCCCD\n")
+            asm.write("    sub     rsp, 40\n")
+            asm.write("    mov     BYTE [rsp+31], 10\n")
+            asm.write("    lea     rcx, [rsp+30]\n")
+            asm.write(".loop:\n")
+            asm.write("    mov     rax, rdi\n")
+            asm.write("    lea     r8, [rsp+32]\n")
+            asm.write("    mul     r9\n")
+            asm.write("    mov     rax, rdi\n")
+            asm.write("    sub     r8, rcx\n")
+            asm.write("    shr     rdx, 3\n")
+            asm.write("    lea     rsi, [rdx+rdx*4]\n")
+            asm.write("    add     rsi, rsi\n")
+            asm.write("    sub     rax, rsi\n")
+            asm.write("    add     eax, 48\n")
+            asm.write("    mov     BYTE [rcx], al\n")
+            asm.write("    mov     rax, rdi\n")
+            asm.write("    mov     rdi, rdx\n")
+            asm.write("    mov     rdx, rcx\n")
+            asm.write("    sub     rcx, 1\n")
+            asm.write("    cmp     rax, 9\n")
+            asm.write("    ja      .loop\n")
+            asm.write("    lea     rax, [rsp+32]\n")
+            asm.write("    mov     edi, 1\n")
+            asm.write("    sub     rdx, rax\n")
+            asm.write("    xor     eax, eax\n")
+            asm.write("    lea     rsi, [rsp+32+rdx]\n")
+            asm.write("    mov     rdx, r8\n")
+            asm.write("    mov     rax, 1\n")
+            asm.write("    syscall\n")
+            asm.write("    add     rsp, 40\n")
+            asm.write("    ret\n")
+    
+        asm.write("global " + entryName + "\n")
+        asm.write(entryName + ":\n")
+        ip = 0
+        while ip < len(program):
+            op = program[ip]
+            nextOP = program[ip]
+            try:
+                nextOP = program[ip+1]
+            except:
+                nextOP = program[ip]
+            asm.write(f"address_{ip}:\n")
+            if op.type == PUSH and nextOP.type == MEMSET:
+                asm.write(f"    ; -- MEMSET {str(op.value)} --\n")
+                asm.write(f"    mov r15, {str(op.value)}\n")
+                ip+=2
+            elif op.type == PUSH:
+                asm.write(f"    ; -- PUSH {str(op.value)} --\n")
+                asm.write(f"    push {str(op.value)}\n")
+                ip+=1
+            elif op.type == PLUS:
+                asm.write(f"    ; -- PLUS --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    add rax, rbx\n") # add registers
+                asm.write(f"    push rax\n")
+                ip+=1
+            elif op.type == MINUS:
+                asm.write(f"    ; -- MINUS --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    sub rbx, rax\n") # substract registers
+                asm.write(f"    push rbx\n")
+                ip+=1
+            elif op.type == DISPLAI:
+                asm.write(f"    ; -- displai --\n")
+                asm.write(f"    pop rdi\n")
+                asm.write(f"    call displai\n") # displai
+                ip+=1
+            elif op.type == EQUAL:
+                asm.write(f"    ; -- EQUAL --\n")
+                asm.write(f"    mov r10, 0\n")
+                asm.write(f"    mov r11, 1\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    cmp rax, rbx\n")
+                asm.write(f"    cmove r10, r11\n") # move on equal flag
+                asm.write(f"    push r10\n")
+                ip+=1
+            elif op.type == GREATER:
+                asm.write(f"    ; -- GREATER --\n")
+                asm.write(f"    mov r10, 0\n")
+                asm.write(f"    mov r11, 1\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    cmp rbx, rax\n")
+                asm.write(f"    cmovg r10, r11\n") # move on greater flag
+                asm.write(f"    push r10\n")
+                ip+=1
+            elif op.type == LESS:
+                asm.write(f"    ; -- LESS --\n")
+                asm.write(f"    mov r10, 0\n")
+                asm.write(f"    mov r11, 1\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    cmp rbx, rax\n")
+                asm.write(f"    cmovl r10, r11\n") # move on less flag
+                asm.write(f"    push r10\n")
+                ip+=1
+            elif op.type == IF:
+                asm.write(f"    ; -- IF --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    test rax, rax\n")
+                asm.write(f"    jz address_{op.value}\n") # jump on zero flag
+                ip+=1
+            elif op.type == ELSE:
+                asm.write(f"    ; -- ELSE --\n")
+                asm.write(f"    jmp address_{op.value}\n") # jump to end
+                asm.write(f"address_{ip+1}:\n")
+                ip+=1
+            elif op.type == END:
+                if ip + 1 != op.value:
+                    asm.write(f"    jmp address_{op.value}\n") # jump back
+                ip+=1
+            elif op.type == DUPLICATE:
+                asm.write(f"    ; -- DUPLICATE --\n")
+                asm.write(f"    pop rax\n") 
+                asm.write(f"    push rax\n")
+                asm.write(f"    push rax\n") # get the value, push it twice 
+                ip+=1
+            elif op.type == DO:
+                asm.write(f"    ; -- WHILE DO --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    test rax, rax\n")
+                asm.write(f"    jz address_{op.value}\n") # jump on zero flag
+                ip+=1
+            elif op.type == MEM:
+                asm.write(f"    ; -- MEMORY --\n")
+                asm.write(f"    mov rax, mem\n")
+                asm.write(f"    add rax, r15\n") # add index
+                asm.write(f"    push rax\n")
+                ip+=1
+            elif op.type == LOAD:
+                asm.write(f"    ; -- LOAD --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    mov rbx, 0\n")  
+                asm.write(f"    mov bl, [rax]\n")
+                asm.write(f"    push rbx\n")
+                ip+=1
+            elif op.type == STORE:
+                asm.write(f"    ; -- STORE --\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    mov [rax], bl\n")
+                ip+=1
+            elif op.type == MEMINC:
+                asm.write(f"   ; -- MEM+ -- \n")
+                asm.write(f"   inc r15\n") # increase index
+                ip+=1
+            elif op.type == MEMDEC:
+                asm.write(f"   ; -- MEM- -- \n")
+                asm.write(f"   dec r15\n") # decrease index
+                ip+=1
+            elif op.type == SYSCALL:
+                asm.write(f"   ; -- SYSCALL -- \n")
+                asm.write(f"   pop rax\n")
+                asm.write(f"   pop rdi\n")
+                asm.write(f"   pop rsi\n")
+                asm.write(f"   pop rdx\n")
+                asm.write(f"   pop r10\n")
+                asm.write(f"   pop r8\n")
+                asm.write(f"   pop r9\n")
+                asm.write(f"   syscall\n") 
+                ip+=1
+            elif op.type == SWAP:
+                asm.write(f"   ; -- SWAP -- \n")
+                asm.write(f"   pop rax\n")
+                asm.write(f"   pop rbx\n")
+                asm.write(f"   push rax\n")
+                asm.write(f"   push rbx\n")
+                ip+=1
+            elif op.type == MEMINDEX:
+                asm.write(f"   ; -- MEMINDEX -- \n")
+                asm.write(f"   push r15\n") # push index
+                ip+=1
+            elif op.type == MEMSET:
+                asm.write(f"   ; -- MEMSET -- \n")
+                asm.write(f"   pop r15\n") # pop index
+                ip+=1
+            elif op.type == MULTIPLY:
+                asm.write(f"    ; -- MULTIPLY --\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    mul rbx\n") # multiply registers
+                asm.write(f"    push rax\n")
+                ip+=1
+            elif op.type == DIVIDE:
+                asm.write(f"    ; -- DIVIDE --\n")
+                asm.write(f"    mov rdx, 0\n")
+                asm.write(f"    pop rbx\n")
+                asm.write(f"    pop rax\n")
+                asm.write(f"    div rbx\n") # divide registers
+                asm.write(f"    push rax\n")
+                ip+=1
+            
+
+        asm.write(f"address_{ip+1}:\n")
+        if appendExit:
+            asm.write("    mov rax, 60\n") # exit syscall
+            asm.write("    mov rdi, 0\n") # code 0
+            asm.write("    syscall\n")
+        asm.write("\nsection .bss\n")
+        asm.write(f"mem resb 64000")
+    
+    doVerbose("Generator","Done")
+
+    if shouldCallNASM:
+        subprocess.call(["nasm", "-felf64", f"{outputName}.asm"])
+
+        if enableLinking:
+            subprocess.call(["ld", "-o", "program" , f"{outputName}.o"])
+            if autoRun:
+                doVerbose("Generator",f"Running: {sys.path[0]}/{outputName}")
+                subprocess.call([f"{sys.path[0]}/{outputName}"])
+
+
 # program
 
 def usage():
@@ -470,6 +703,7 @@ def usage():
     print("-n -> disable calling nasm")
     print("-e [entry name] -> change entry point name from _start to [entry name]")
     print("-o [output name] -> output name")
+    print("-ob -> optimized build")
 
 def parseArguments(args,argslen):
     global enableLinking
@@ -479,6 +713,7 @@ def parseArguments(args,argslen):
     global outputName
     global entryName
     global shouldCallNASM
+    global optimizedGenerator
     # parse arguments
     if argslen < 2:
         print("Not enough arguments!")
@@ -495,6 +730,8 @@ def parseArguments(args,argslen):
                 enableLinking = False
             elif args[idx] == "-es":
                 appendExit = False
+            elif args[idx] == "-ob":
+                optimizedGenerator = True
             elif args[idx] == "-e":
                 if idx < argslen:
                     entryName = args[idx+1]
@@ -517,4 +754,7 @@ except:
 
 program = referenceBlocks(parse(preprocessor(inputData)))
 
-generate(program)
+if optimizedGenerator:
+    generateOptimized(program)
+else:
+    generate(program)
