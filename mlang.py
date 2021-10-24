@@ -329,7 +329,7 @@ def generate(prg):
             asm.write(f"   sub rbx, rax\n") # substract registers
             asm.write(f"   push rbx\n")
          elif op.type == DISPLAI:
-            asm.write(f"   ; -- displai --\n")
+            asm.write(f"   ; -- DISPLAI --\n")
             asm.write(f"   pop rdi\n")
             asm.write(f"   call displai\n") # displai
          elif op.type == EQUAL:
@@ -524,7 +524,7 @@ def generateOptimized(prg):
             asm.write(f"   mov r15, {str(op.value)}\n")
             ip+=2
          elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == PUSH and fourthOP.type == PUSH and fivthOP.type == MEM and sixthOP.type == PUSH and seventhOP.type == PUSH and eighthOP.type == SYSCALL:
-            asm.write(f"   ; -- SYSCALL -- \n")
+            asm.write(f"   ; -- SYSCALL MEMORY -- \n")
             asm.write(f"   mov rax, {seventhOP.value}\n")
             asm.write(f"   mov rdi, {sixthOP.value}\n")
             asm.write(f"   mov rsi, mem\n")
@@ -575,6 +575,11 @@ def generateOptimized(prg):
             asm.write(f"   mul rbx\n") # multiply registers
             asm.write(f"   push rax\n")
             ip+=3
+         elif op.type == MEMINDEX and secondOP.type == DISPLAI:
+            asm.write(f"   ; -- DISPLAI MEMINDEX --\n")
+            asm.write(f"   mov rdi, r15\n")
+            asm.write(f"   call displai\n") # displai
+            ip+=2
          elif op.type == PUSH:
             asm.write(f"   ; -- PUSH {str(op.value)} --\n")
             asm.write(f"   push {str(op.value)}\n")
@@ -594,7 +599,7 @@ def generateOptimized(prg):
             asm.write(f"   push rbx\n")
             ip+=1
          elif op.type == DISPLAI:
-            asm.write(f"   ; -- displai --\n")
+            asm.write(f"   ; -- DISPLAI --\n")
             asm.write(f"   pop rdi\n")
             asm.write(f"   call displai\n") # displai
             ip+=1
