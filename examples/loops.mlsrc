@@ -1,6 +1,6 @@
 %include 'stdlib/standard.mlsrc'
 
-# push ABCD on memory #
+ # push ABCD on memory #
 0 while dp 4 < do # while 0 is smaller than 4 do #
     dp 65 + pushMemory m+ # push on memory character 65 + variable ('A'+alphabet character) #
     dp 1 + # increase variable #
@@ -14,7 +14,6 @@ end
     m-
 end
 
-# poping all characters from memory #
 0 while dp 5 < do
     dp 1 +
     popMemory display m+
