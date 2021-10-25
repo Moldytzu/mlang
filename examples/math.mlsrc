@@ -8,3 +8,5 @@ newLine pushMemory display
 newLine pushMemory display
 4 2 / displayi
 newLine pushMemory display
+1 displayi
+newLine pushMemory display

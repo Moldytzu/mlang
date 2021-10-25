@@ -12,7 +12,7 @@ tests = [
     Test("examples/ifs.mlsrc","N\nY\nN\n"),
     Test("examples/loops.mlsrc","ABCDEFGHIJKLMNOPQRSTUVWXYZ\n"),
     Test("examples/macros.mlsrc","A\n"),
-    Test("examples/math.mlsrc","6\n2\n8\n2\n"),
+    Test("examples/math.mlsrc","6\n2\n8\n2\n1\n"),
     Test("examples/memory.mlsrc","990\nH\n993\n"),
 ]
 

@@ -566,6 +566,11 @@ def generateOptimized(prg):
             asm.write(f"   mov rdi, r15\n")
             asm.write(f"   call DISPLAYI\n") # DISPLAYI
             ip+=2
+         elif op.type == PUSH and secondOP.type == DISPLAYI:
+            asm.write(f"   ; -- DISPLAYI PUSH --\n")
+            asm.write(f"   mov rdi, {str(op.value)}\n")
+            asm.write(f"   call DISPLAYI\n") # DISPLAYI
+            ip+=2
          elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == LESS:
             asm.write(f"   ; -- LESS --\n")
             asm.write(f"   mov r10, 0\n")
@@ -595,6 +600,13 @@ def generateOptimized(prg):
             asm.write(f"   cmp rbx, rax\n")
             asm.write(f"   cmove r10, r11\n") # move on less flag
             asm.write(f"   push r10\n")
+            ip+=3
+         elif op.type == PUSH and secondOP.type == MEM and thirdOP.type == SWAP:
+            asm.write(f"   ; -- MEMORY PUSH --\n")
+            asm.write(f"   mov rax, mem\n")
+            asm.write(f"   add rax, r15\n") # add index
+            asm.write(f"   push rax\n")
+            asm.write(f"   push {str(op.value)}\n")
             ip+=3
          elif op.type == PUSH:
             asm.write(f"   ; -- PUSH {str(op.value)} --\n")
