@@ -601,6 +601,12 @@ def generateOptimized(prg):
             asm.write(f"   cmove r10, r11\n") # move on less flag
             asm.write(f"   push r10\n")
             ip+=3
+         elif op.type == PUSH and secondOP.type == MEM and thirdOP.type == SWAP and fourthOP.type == STORE:
+            asm.write(f"   ; -- MEMORY PUSH STORE --\n")
+            asm.write(f"   mov rax, mem\n")
+            asm.write(f"   add rax, r15\n") # add index
+            asm.write(f"   mov [rax], byte {str(op.value)}\n") # store
+            ip+=4
          elif op.type == PUSH and secondOP.type == MEM and thirdOP.type == SWAP:
             asm.write(f"   ; -- MEMORY PUSH --\n")
             asm.write(f"   mov rax, mem\n")

@@ -6,3 +6,4 @@
 - Syscalls
 - Includes
 - Macros
+- Basic optimization
