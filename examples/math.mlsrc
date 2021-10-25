@@ -1,10 +1,10 @@
 %include 'stdlib/standard.mlsrc'
 
-4 2 + displai
+4 2 + displayi
 newLine pushMemory display
-4 2 - displai
+4 2 - displayi
 newLine pushMemory display
-4 2 * displai
+4 2 * displayi
 newLine pushMemory display
-4 2 / displai
+4 2 / displayi
 newLine pushMemory display

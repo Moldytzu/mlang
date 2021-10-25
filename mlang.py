@@ -16,8 +16,7 @@ def findallMatches(expression,data):
 
 def doVerbose(section,text):
    global verbose
-   if verbose:
-      print(f"{section}: {text}")
+   if verbose: print(f"{section}: {text}")
 
 # options
 enableLinking = True
@@ -33,7 +32,7 @@ optimizedGenerator = False
 PUSH = 0
 PLUS = 1
 MINUS = 2
-DISPLAI = 3
+DISPLAYI = 3
 EQUAL = 4
 IF = 5
 END = 6
@@ -55,7 +54,7 @@ MEMSET = 21
 MULTIPLY = 22
 DIVIDE = 23
 
-operationIdentifiers = ["PUSH","PLUS","MINUS","DISPLAI","EQUAL","IF","END","ELSE","DUPLICATE","GREATER","LESS","WHILE","DO","MEM","STORE","LOAD","MEMINC","MEMDEC","SYSCALL","SWAP","MEMINDEX","MEMSET","MULTIPLY","DIVIDE"]
+operationIdentifiers = ["PUSH","PLUS","MINUS","DISPLAYI","EQUAL","IF","END","ELSE","DUPLICATE","GREATER","LESS","WHILE","DO","MEM","STORE","LOAD","MEMINC","MEMDEC","SYSCALL","SWAP","MEMINDEX","MEMSET","MULTIPLY","DIVIDE"]
 
 class Operation():
    type = None
@@ -77,7 +76,6 @@ def parse(data):
    doVerbose("Parser","Parsing")
    for word in data:
       try:
-         if word in ("","\t","\n"): continue # whitespace
          if word[0] == "'" and word[-1] == "'" and len(word) == 3: # character
             doVerbose("Parser",f"Appending PUSH with {ord(word[1])}")
             operations.append(Operation(PUSH,ord(word[1])))
@@ -107,9 +105,9 @@ def parse(data):
          elif word == ">":
             doVerbose("Parser","Appending GREATER")
             operations.append(Operation(GREATER))
-         elif word.lower() == "displai" or word.lower() == "dispi":
-            doVerbose("Parser","Appending DISPLAI")
-            operations.append(Operation(DISPLAI))
+         elif word.lower() == "displayi" or word.lower() == "displai" or word.lower() == "dispi":
+            doVerbose("Parser","Appending DISPLAYI")
+            operations.append(Operation(DISPLAYI))
          elif word.lower() == "if":
             doVerbose("Parser","Appending IF")
             operations.append(Operation(IF))
@@ -262,19 +260,16 @@ def preprocessor(data):
 
 #generator
 def generate(prg):
-   if prg == []:
-      print("Nothing to generate!")
-      exit(0)
    doVerbose("Generator","Generating: " + str(prg))
    with open(outputName + ".asm", "w") as asm:
       asm.write("section .text\n")
       # optimization: include display only if it's used
-      displaisUsed = 0
+      displayiUsed = 0
       for i in range(len(prg)):
-         if prg[i].type == DISPLAI:
-            displaisUsed = 1
-      if displaisUsed:
-         asm.write("displai:\n")
+         if prg[i].type == DISPLAYI:
+            displayiUsed = 1
+      if displayiUsed:
+         asm.write("DISPLAYI:\n")
          asm.write("   mov    r9, 0xCCCCCCCCCCCCCCCD\n")
          asm.write("   sub    rsp, 40\n")
          asm.write("   mov    BYTE [rsp+31], 10\n")
@@ -329,10 +324,10 @@ def generate(prg):
             asm.write(f"   pop rbx\n")
             asm.write(f"   sub rbx, rax\n") # substract registers
             asm.write(f"   push rbx\n")
-         elif op.type == DISPLAI:
-            asm.write(f"   ; -- DISPLAI --\n")
+         elif op.type == DISPLAYI:
+            asm.write(f"   ; -- DISPLAYI --\n")
             asm.write(f"   pop rdi\n")
-            asm.write(f"   call displai\n") # displai
+            asm.write(f"   call DISPLAYI\n") # DISPLAYI
          elif op.type == EQUAL:
             asm.write(f"   ; -- EQUAL --\n")
             asm.write(f"   mov r10, 0\n")
@@ -450,29 +445,17 @@ def generate(prg):
    
    doVerbose("Generator","Done")
 
-   if shouldCallNASM:
-      subprocess.call(["nasm", "-felf64", f"{outputName}.asm"])
-
-      if enableLinking:
-         subprocess.call(["ld", "-o", "program" , f"{outputName}.o"])
-         if autoRun:
-            doVerbose("Generator",f"Running: {sys.path[0]}/{outputName}")
-            subprocess.call([f"{sys.path[0]}/{outputName}"])
-
 def generateOptimized(prg):
-   if prg == []:
-      print("Nothing to generate!")
-      exit(0)
    doVerbose("Generator","Generating Optimized: " + str(prg))
    with open(outputName + ".asm", "w") as asm:
       asm.write("section .text\n")
       # optimization: include display only if it's used
-      displaisUsed = 0
+      displayiUsed = 0
       for i in range(len(prg)):
-         if prg[i].type == DISPLAI:
-            displaisUsed = 1
-      if displaisUsed:
-         asm.write("displai:\n")
+         if prg[i].type == DISPLAYI:
+            displayiUsed = 1
+      if displayiUsed:
+         asm.write("DISPLAYI:\n")
          asm.write("   mov    r9, 0xCCCCCCCCCCCCCCCD\n")
          asm.write("   sub    rsp, 40\n")
          asm.write("   mov    BYTE [rsp+31], 10\n")
@@ -578,10 +561,10 @@ def generateOptimized(prg):
             asm.write(f"   mul rbx\n") # multiply registers
             asm.write(f"   push rax\n")
             ip+=3
-         elif op.type == MEMINDEX and secondOP.type == DISPLAI:
-            asm.write(f"   ; -- DISPLAI MEMINDEX --\n")
+         elif op.type == MEMINDEX and secondOP.type == DISPLAYI:
+            asm.write(f"   ; -- DISPLAYI MEMINDEX --\n")
             asm.write(f"   mov rdi, r15\n")
-            asm.write(f"   call displai\n") # displai
+            asm.write(f"   call DISPLAYI\n") # DISPLAYI
             ip+=2
          elif op.type == PUSH and secondOP.type == PUSH and thirdOP.type == LESS:
             asm.write(f"   ; -- LESS --\n")
@@ -631,10 +614,10 @@ def generateOptimized(prg):
             asm.write(f"   sub rbx, rax\n") # substract registers
             asm.write(f"   push rbx\n")
             ip+=1
-         elif op.type == DISPLAI:
-            asm.write(f"   ; -- DISPLAI --\n")
+         elif op.type == DISPLAYI:
+            asm.write(f"   ; -- DISPLAYI --\n")
             asm.write(f"   pop rdi\n")
-            asm.write(f"   call displai\n") # displai
+            asm.write(f"   call DISPLAYI\n") # DISPLAYI
             ip+=1
          elif op.type == EQUAL:
             asm.write(f"   ; -- EQUAL --\n")
@@ -778,17 +761,16 @@ def generateOptimized(prg):
 
    doVerbose("Generator","Done")
 
-   if shouldCallNASM:
-      subprocess.call(["nasm", "-felf64", f"{outputName}.asm"])
+def compile():
+   subprocess.call(["nasm", "-felf64", f"{outputName}.asm"])
 
-      if enableLinking:
-         subprocess.call(["ld", "-o", "program" , f"{outputName}.o"])
-         if autoRun:
-            doVerbose("Generator",f"Running: {sys.path[0]}/{outputName}")
-            subprocess.call([f"{sys.path[0]}/{outputName}"])
+   if enableLinking:
+      subprocess.call(["ld", "-o", "program" , f"{outputName}.o"])
+      if autoRun:
+         doVerbose("Generator",f"Running: {sys.path[0]}/{outputName}")
+         subprocess.call([f"{sys.path[0]}/{outputName}"])
 
-# program
-
+# main
 def usage():
    print("Usage: mlang.py <source file> [options]")
    print("")
@@ -838,21 +820,27 @@ def parseArguments(args,argslen):
          elif args[idx] == "-n":
             shouldCallNASM = False
 
-arguments = sys.argv
-argumentsLen = len(sys.argv)
+if __name__ == "__main__":
+   parseArguments(sys.argv, len(sys.argv))
 
-parseArguments(arguments, argumentsLen)
+   inputData = ""
+   try:
+      inputData = open(sys.argv[1], "r").read()
+   except:
+      error("FileError",f"Source code '{sys.argv[1]}' not found")
+      exit(-1)
 
-inputData = ""
-try:
-   inputData = open(sys.argv[1], "r").read()
-except:
-   error("FileError",f"Source code '{sys.argv[1]}' not found")
-   exit(-1)
+   program = linkBlocks(parse(preprocessor(inputData)))
 
-program = linkBlocks(parse(preprocessor(inputData)))
+   if not program: error("GeneratorError","Nothing to generate!")
 
-if optimizedGenerator:
-   generateOptimized(program)
+   if optimizedGenerator:
+      generateOptimized(program)
+   else:
+      generate(program)
+
+   if shouldCallNASM:
+      compile()
 else:
-   generate(program)
+   error("SystemError","mlang shouldn't be imported!")
+   exit(-1)

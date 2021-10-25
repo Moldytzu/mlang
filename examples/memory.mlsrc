@@ -1,8 +1,8 @@
 %include 'stdlib/standard.mlsrc'
 
-990 mS mI displai             # set memory index to 990 and the get the index and print it #
-newLine pushMemory display m+ # push a new line on the memory & display it #
-'H' pushMemory display m+     # push 'H' on the memory & display it #
-newLine pushMemory display m+ # push a new line on the memory & display it #
-mI displai                    # get the current memory index and then display it #
-newLine pushMemory display m+ # push a new line on the memory & display it #
+990 mS mI displayi             # set memory index to 990 and the get the index and print it #
+newLine pushMemory display m+  # push a new line on the memory & display it #
+'H' pushMemory display m+      # push 'H' on the memory & display it #
+newLine pushMemory display m+  # push a new line on the memory & display it #
+mI displayi                    # get the current memory index and then display it #
+newLine pushMemory display m+  # push a new line on the memory & display it #
