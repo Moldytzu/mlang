@@ -785,7 +785,6 @@ def generateOptimized(prg):
             doVerbose("Generator",f"Running: {sys.path[0]}/{outputName}")
             subprocess.call([f"{sys.path[0]}/{outputName}"])
 
-
 # program
 
 def usage():
